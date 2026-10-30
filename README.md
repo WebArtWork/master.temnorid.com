@@ -4,7 +4,7 @@
 
 It replaces the separate Pets and Scribe games: the foal, its care and its two trainings are the **Stable**, the Academy desk is the **Scribe**, and five more trades (forge, workshop, kitchen, tailor, herbalist) share one wallet, one level and one save. You choose a trade from the hub, take an order, do a few short hands-on steps with the mouse and are paid for the quality of your work. A wrong answer is never punished: you are told why and try again for free. No avatar, no walking, no connection of any kind.
 
-**Status:** version 0.1.0, first playable MVP. Website: https://master.temnorid.com · Download: not published yet (no repository or release exists, so the page shows "Coming soon" instead of a made-up link).
+**Status:** version 0.1.0, first playable MVP. Website: https://master.temnorid.com · Download: [Temnorid-Master-Setup.exe](https://github.com/WebArtWork/master.temnorid.com/releases/latest/download/Temnorid-Master-Setup.exe).
 
 ## How it plays
 
@@ -81,4 +81,4 @@ Packages (all local, see `Packages/manifest.json`): `3d-unity-core`, `3d-unity-i
 
 ## Release
 
-Windows installer or zip attached to a GitHub Release, and the "Download" button on `docs/index.html` pointing at that asset. TODO: create the repository and the release (not done: nothing is committed or pushed); until then the button is disabled.
+Windows installer or zip attached to a GitHub Release, and the "Download" button on `docs/index.html` pointing at that asset. The first release (v0.1.0) is published and the button points at its installer.
