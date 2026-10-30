@@ -1,0 +1,25 @@
+{
+  "allowUnsafeCode": false,
+  "noEngineReferences": false,
+  "versionDefines": [],
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ],
+  "name": "Temnorid.Master.Tests.PlayMode",
+  "rootNamespace": "Temnorid.Master.Tests",
+  "references": [
+    "Temnorid.Master",
+    "ITKamianets.Engine.Save",
+    "Unity.InputSystem",
+    "ITKamianets.Engine.Input",
+    "UnityEngine.TestRunner",
+    "UnityEditor.TestRunner"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "overrideReferences": true,
+  "precompiledReferences": [
+    "nunit.framework.dll"
+  ],
+  "autoReferenced": false
+}

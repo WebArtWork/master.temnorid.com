@@ -1,0 +1,24 @@
+{
+  "allowUnsafeCode": false,
+  "noEngineReferences": false,
+  "versionDefines": [],
+  "defineConstraints": [],
+  "name": "Temnorid.Master",
+  "rootNamespace": "Temnorid.Master",
+  "references": [
+    "ITKamianets.Engine.Core",
+    "ITKamianets.Engine.Input",
+    "Unity.InputSystem",
+    "UnityEngine.UI",
+    "ITKamianets.Engine.Feedback",
+    "ITKamianets.Engine.Graybox",
+    "ITKamianets.Engine.UI",
+    "ITKamianets.Engine.Save",
+    "ITKamianets.Engine.Synth"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true
+}

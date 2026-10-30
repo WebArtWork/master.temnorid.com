@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Temnorid: Master</title>
+	<meta name="description" content="Temnorid: Master is a cozy offline workshop game: learn seven trades (stable, scribe, forge, workshop, kitchen, tailor, herbalist), do short hands-on orders, raise a foal and earn coins and experience. Windows, free.">
+	<link rel="canonical" href="https://master.temnorid.com/">
+	<meta property="og:type" content="website">
+	<meta property="og:title" content="Temnorid: Master">
+	<meta property="og:description" content="Seven trades in one village workshop.">
+	<meta property="og:url" content="https://master.temnorid.com/">
+	<meta name="theme-color" content="#17120d">
+	<style>
+		:root { --accent: #e0b062; --bg: #17120d; --panel: #241b13; --line: #3d3023; --text: #eceae4; --muted: #a9acb8; }
+		* { box-sizing: border-box; }
+		html { scroll-behavior: smooth; }
+		body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+		a { color: var(--accent); }
+		.wrap { max-width: 880px; margin: 0 auto; padding: 0 20px; }
+		header.site { border-bottom: 1px solid var(--line); }
+		header.site .wrap { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; padding-bottom: 14px; }
+		.brand { font-weight: 700; color: var(--text); text-decoration: none; letter-spacing: .02em; }
+		nav a { margin-left: 18px; color: var(--muted); text-decoration: none; font-size: 15px; }
+		nav a:hover { color: var(--text); }
+		.hero { padding: 72px 0 56px; border-bottom: 1px solid var(--line); background: radial-gradient(900px 300px at 50% -10%, color-mix(in srgb, var(--accent) 20%, transparent), transparent); }
+		.eyebrow { color: var(--accent); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: 13px; margin: 0 0 10px; }
+		h1 { font-size: clamp(36px, 7vw, 60px); line-height: 1.08; margin: 0 0 12px; }
+		.tagline { font-size: 22px; margin: 0 0 18px; }
+		.lead { color: var(--muted); max-width: 640px; margin: 0 0 28px; }
+		.btn { display: inline-block; background: var(--accent); color: #17120d; font-weight: 700; padding: 13px 24px; border-radius: 10px; text-decoration: none; }
+		.btn[aria-disabled="true"] { background: var(--line); color: var(--muted); cursor: not-allowed; }
+		.fine { color: var(--muted); font-size: 14px; margin: 14px 0 0; }
+		section { padding: 48px 0; border-bottom: 1px solid var(--line); }
+		h2 { font-size: 28px; margin: 0 0 16px; }
+		h3 { font-size: 18px; margin: 24px 0 8px; }
+		p { margin: 0 0 14px; }
+		ol, ul { padding-left: 22px; margin: 0 0 14px; }
+		li { margin-bottom: 8px; }
+		table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 10px; overflow: hidden; }
+		th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+		th { color: var(--muted); font-weight: 600; font-size: 14px; }
+		tr:last-child td { border-bottom: 0; }
+		td:first-child { white-space: nowrap; font-weight: 600; }
+		.cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+		.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+		.card h3 { margin-top: 0; }
+		.shot { background: var(--panel); border: 1px dashed var(--line); border-radius: 12px; padding: 38px 18px; text-align: center; color: var(--muted); }
+		.note { background: var(--panel); border-left: 3px solid var(--accent); padding: 14px 16px; border-radius: 6px; color: var(--muted); }
+		footer { padding: 32px 0 56px; color: var(--muted); font-size: 14px; }
+		:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+		@media (max-width: 560px) { nav a:not(:last-child) { display: none; } }
+	</style>
+</head>
+<body>
+	<header class="site">
+		<div class="wrap">
+			<a class="brand" href="./">Temnorid: Master</a>
+			<nav aria-label="Main menu">
+				<a href="#about">About</a>
+				<a href="#trades">Seven trades</a>
+				<a href="#controls">Controls</a>
+				<a href="#download">Download</a>
+			</nav>
+		</div>
+	</header>
+
+	<main>
+		<div class="hero">
+			<div class="wrap">
+				<p class="eyebrow">A Temnorid game · Windows · first MVP · offline</p>
+				<h1>Temnorid: Master</h1>
+				<p class="tagline">Choose a trade. Do the work. Earn your name.</p>
+				<p class="lead">A warm medieval workshop where you learn seven trades with your own hands: raise and train a foal, verify and seal documents, forge, build mechanisms, cook, sew and prepare herbs. Short orders, direct mouse work, fair retries. The text of the game is in Ukrainian.</p>
+				<a class="btn" href="#download" aria-disabled="true">Coming soon</a>
+				<p class="fine">Free · Windows 10 or newer · the installer has not been published yet · offline.</p>
+			</div>
+		</div>
+
+		<section id="about">
+			<div class="wrap">
+				<h2>About</h2>
+				<p>You are a young villager in a shared workshop. There is no walking around and no punishment: you pick a trade from the hub, take an order, do one to three short hands-on steps and are paid for the quality of your work. A wrong answer or a broken mechanism only means you are told why and can try again for free. One wallet, one level and one save cover every trade. A session takes a few minutes; all twelve orders and both trainings take about an hour.</p>
+				<p class="note"><strong>Offline MVP.</strong> Nothing is connected to or sent to any other service: no login, no sync, no other-game screens. All names, seals and symbols are invented for the game, and the herb sets are decorative, not medicine.</p>
+			</div>
+		</section>
+
+		<section id="trades">
+			<div class="wrap">
+				<h2>Seven trades, twelve orders</h2>
+				<div class="cards">
+					<div class="card"><h3>Stable</h3><p>Feed, groom, pet and rest a foal, then train it on an obstacle course and with command timing. It grows as it levels.</p></div>
+					<div class="card"><h3>Scribe</h3><p>Compare a document with its reference, trace a mark and press the right seal in the right place.</p></div>
+					<div class="card"><h3>Forge</h3><p>Heat the metal to the mark, strike three rings and choose the finish the order asks for.</p></div>
+					<div class="card"><h3>Workshop</h3><p>Place the parts in the right order and test the mechanism.</p></div>
+					<div class="card"><h3>Kitchen</h3><p>Choose the three right ingredients, heat the pot and stir in time.</p></div>
+					<div class="card"><h3>Tailor</h3><p>Pick the fabric, cut along the pattern and stitch in the green zones.</p></div>
+					<div class="card"><h3>Herbalist</h3><p>Choose two herbs, grind to the mark and label the bundle.</p></div>
+					<div class="card"><h3>Shared progress</h3><p>One wallet, a level, a rank in every trade, three upgrades, a journal and a safe local save.</p></div>
+				</div>
+				<h3>Screenshots</h3>
+				<div class="shot">Screenshots will appear with the first release.</div>
+			</div>
+		</section>
+
+		<section id="controls">
+			<div class="wrap">
+				<h2>Controls</h2>
+				<table>
+					<thead><tr><th>Action</th><th>Input</th></tr></thead>
+					<tbody>
+						<tr><td>Choose, press, drag</td><td>Left mouse button</td></tr>
+						<tr><td>Stop the bar, stir, stitch, jump, command</td><td>Space, or the big on-screen button</td></tr>
+						<tr><td>Back, close, pause</td><td>Esc</td></tr>
+						<tr><td>Menus</td><td>Mouse, or arrows and Enter</td></tr>
+					</tbody>
+				</table>
+				<h3>How a session goes</h3>
+				<ol>
+					<li>Open a trade from the hub (the Stable is a good first stop).</li>
+					<li>Take an order and work through its numbered steps.</li>
+					<li>Confirm to see the result: score, coins and experience, or the reason it was sent back.</li>
+					<li>Spend coins on an upgrade, or pick the next trade.</li>
+				</ol>
+				<h3>Scope and limits</h3>
+				<p>Version 0.1.0: seven trades, twelve orders, two horse trainings, three upgrades, a local save, Ukrainian text only, no gamepad.</p>
+				<h3>System requirements</h3>
+				<p>Windows 10 or newer, 64-bit, a graphics card that runs Direct3D 11. The game is light; it has not been measured on a range of machines, so no frame-rate promises are made.</p>
+				<h3>Changelog</h3>
+				<p><strong>0.1.0</strong> · first playable MVP.</p>
+			</div>
+		</section>
+
+		<section id="download">
+			<div class="wrap">
+				<h2>Download</h2>
+				<p><a class="btn" href="#download" aria-disabled="true">Coming soon</a></p>
+				<p class="fine">When the first release is published, this button will point to the Windows installer attached to the latest GitHub Release. Until then there is nothing to download, and no link is shown. Version 0.1.0.</p>
+			</div>
+		</section>
+	</main>
+
+	<footer>
+		<div class="wrap">
+			<p>Temnorid: Master · version 0.1.0 · part of <a href="https://temnorid.com">Temnorid</a> · built on the <a href="https://3d.itkamianets.com">IT Kamianets 3D Engine</a>.</p>
+		</div>
+	</footer>
+</body>
+</html>
