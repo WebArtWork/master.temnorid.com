@@ -173,8 +173,67 @@ namespace Temnorid.Master
 			if (!outcome.Success) return null;
 			if (_processed.Contains(AttemptId)) return null;
 
+			var receipt = Pay(job, outcome, AttemptId);
+			LastReceipt = receipt;
+			ActiveJobId = null;
+			AttemptId = null;
+			Data.Clear();
+			return receipt;
+		}
+
+		/// <summary>
+		/// Judges what another player did on their own screen and, when it passes, pays it from this (the shared) state under <paramref name="key"/>,
+		/// which is paid once. This session's own active commission is not touched. Null when it is rejected, was already paid or is unknown.
+		/// </summary>
+		public Receipt CommitRemote(string jobId, AttemptData data, string key, out TaskOutcome outcome)
+		{
+			outcome = null;
+			var job = MasterContent.FindJob(jobId);
+			if (job == null || data == null || string.IsNullOrEmpty(key) || StatusOf(jobId) == JobStatus.Locked) return null;
+			outcome = TaskScoring.Evaluate(job, data, _upgrades);
+			if (!outcome.Complete || !outcome.Success) return null;
+			if (_processed.Contains(key)) return null;
+			return Pay(job, outcome, key);
+		}
+
+		/// <summary>Judges the active commission without paying (the shared workshop's guests do this on their own screen and ask the host to pay).</summary>
+		public TaskOutcome Judge()
+		{
+			if (ActiveJobId == null) return null;
+			var outcome = TaskScoring.Evaluate(MasterContent.FindJob(ActiveJobId), Data, _upgrades);
+			if (outcome.Complete) LastOutcome = outcome;
+			return outcome;
+		}
+
+		/// <summary>
+		/// A guest's mirror of what the host paid: the same coins, experience, rank, completion and history as the host applied, and the active commission closed.
+		/// The host's next snapshot says the same thing again, so applying both changes nothing.
+		/// </summary>
+		public void ApplyRemoteReceipt(Receipt receipt)
+		{
+			if (receipt == null) return;
+			var job = MasterContent.FindJob(receipt.Id);
+			if (job == null) return;
+			Coins += receipt.Coins;
+			GlobalXp += receipt.GlobalXp;
+			_skill[job.Profession] = SkillXp(job.Profession) + receipt.SkillXp;
+			if (receipt.FirstTime && !_completed.Contains(job.Id)) _completed.Add(job.Id);
+			if (receipt.Quality > BestScore(job.Id)) _best[job.Id] = receipt.Quality;
+			AddHistory(job.Profession, job.Id, receipt.Quality, receipt.Coins, receipt.GlobalXp);
+			LastReceipt = receipt;
+			if (ActiveJobId == job.Id)
+			{
+				ActiveJobId = null;
+				AttemptId = null;
+				Data.Clear();
+			}
+		}
+
+		/// <summary>The reward of a passed commission, applied once: the wallet, the experience, the completion, the best score and the history.</summary>
+		Receipt Pay(JobDef job, TaskOutcome outcome, string attemptId)
+		{
 			var first = !_completed.Contains(job.Id);
-			var receipt = new Receipt { AttemptId = AttemptId, Profession = job.Profession, Id = job.Id, Quality = outcome.Quality, FirstTime = first };
+			var receipt = new Receipt { AttemptId = attemptId, Profession = job.Profession, Id = job.Id, Quality = outcome.Quality, FirstTime = first };
 			if (first)
 			{
 				receipt.Coins = Math.Max(1, (int)Math.Floor(job.BaseCoins * outcome.Quality / 100.0));
@@ -189,7 +248,7 @@ namespace Temnorid.Master
 			}
 			receipt.LevelBefore = Level;
 			receipt.RankBefore = Rank(job.Profession);
-			_processed.Add(AttemptId);
+			_processed.Add(attemptId);
 			Coins += receipt.Coins;
 			GlobalXp += receipt.GlobalXp;
 			_skill[job.Profession] = SkillXp(job.Profession) + receipt.SkillXp;
@@ -198,10 +257,6 @@ namespace Temnorid.Master
 			receipt.LevelAfter = Level;
 			receipt.RankAfter = Rank(job.Profession);
 			AddHistory(job.Profession, job.Id, receipt.Quality, receipt.Coins, receipt.GlobalXp);
-			LastReceipt = receipt;
-			ActiveJobId = null;
-			AttemptId = null;
-			Data.Clear();
 			return receipt;
 		}
 
@@ -470,6 +525,40 @@ namespace Temnorid.Master
 				AttemptId = s.attemptId;
 				if (s.dataKeys != null && s.dataValues != null)
 					for (var i = 0; i < Math.Min(s.dataKeys.Length, s.dataValues.Length); i++) Data.Set(s.dataKeys[i], s.dataValues[i]);
+			}
+		}
+
+		/// <summary>
+		/// A guest of a shared workshop takes the host's state (wallet, experience, ranks, completed orders, upgrades, the horse, the history) but keeps what is its own:
+		/// the commission it is working on and its answers, the attempt ids it hands out, the trade it looked at, the help it has read and the result on show.
+		/// </summary>
+		public void LoadShared(MasterSave shared)
+		{
+			if (shared == null) return;
+			var job = ActiveJobId;
+			var attempt = AttemptId;
+			var answers = Data.All.ToArray();
+			var tutorials = _tutorials.ToArray();
+			var selected = SelectedProfession;
+			var id = _sessionId;
+			var counter = _counter;
+			var outcome = LastOutcome;
+			var receipt = LastReceipt;
+
+			Load(shared);
+
+			_sessionId = id;
+			_counter = counter;
+			_tutorials.Clear();
+			_tutorials.AddRange(tutorials);
+			SelectedProfession = selected;
+			LastOutcome = outcome;
+			LastReceipt = receipt;
+			if (job != null && attempt != null && MasterContent.FindJob(job) != null && StatusOf(job) != JobStatus.Locked)
+			{
+				ActiveJobId = job;
+				AttemptId = attempt;
+				foreach (var pair in answers) Data.Set(pair.Key, pair.Value);
 			}
 		}
 	}

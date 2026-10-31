@@ -12,6 +12,8 @@
     "ITKamianets.Engine.Save",
     "Unity.InputSystem",
     "ITKamianets.Engine.Input",
+    "ITKamianets.Engine.Net",
+    "ITKamianets.Engine.Shell",
     "UnityEngine.TestRunner",
     "UnityEditor.TestRunner"
   ],

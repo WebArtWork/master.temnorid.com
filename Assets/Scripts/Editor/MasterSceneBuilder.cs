@@ -1,5 +1,6 @@
 using ITKamianets.Engine.Graybox;
 using ITKamianets.Engine.Graybox.EditorTools;
+using ITKamianets.Engine.Shell.Editor;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.SceneManagement;
@@ -27,9 +28,7 @@ namespace Temnorid.Master.EditorTools
 		[MenuItem("Temnorid/Master/Build Scene")]
 		public static void Build()
 		{
-			PlayerSettings.productName = "Temnorid Master";
-			PlayerSettings.companyName = "Temnorid";
-			PlayerSettings.bundleVersion = "0.1.0";
+			ShellSceneKit.ApplyPlatformSettings("Temnorid", "Temnorid Master", "com.itkamianets.master", "0.2.0");
 			PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Standalone, "com.itkamianets.temnoridmaster");
 			PlayerSettings.runInBackground = true;
 			PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;
@@ -100,7 +99,10 @@ namespace Temnorid.Master.EditorTools
 			gameObject.AddComponent<MasterHud>().Game = game;
 
 			EditorSceneManager.SaveScene(scene, ScenePath);
-			EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
+			// The shell scenes open new scenes: the game scene is saved first and nothing from it is needed after.
+			ShellSceneKit.BuildBoot();
+			ShellSceneKit.BuildMenu();
+			ShellSceneKit.SetBuildOrder(ScenePath);
 			AssetDatabase.SaveAssets();
 			Debug.Log("[Master] Scene built: " + ScenePath);
 		}

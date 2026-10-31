@@ -75,7 +75,7 @@ namespace Temnorid.Master
 				_stepTexts[i] = _stepButtons[i].GetComponentInChildren<Text>();
 			}
 
-			_taskCard = Box("Card", t, 0.04f, 0.125f, 0.96f, 0.765f, Panel);
+			_taskCard = Box("Card", t, 0.04f, 0.15f, 0.96f, 0.765f, Panel);
 			var card = _taskCard.transform;
 			_order = Lbl(card, "", 26, TextAnchor.MiddleLeft, 0.03f, 0.87f, 0.97f, 0.99f, Gold, true);
 			_message = Lbl(card, "", 28, TextAnchor.MiddleCenter, 0.03f, 0.01f, 0.97f, 0.12f, Ink, true);
@@ -91,11 +91,11 @@ namespace Temnorid.Master
 			BuildMultiPanel(r);
 			BuildPartsPanel(r);
 
-			Btn(t, Loc.T("back"), 0.04f, 0.02f, 0.2f, 0.11f, () => Game.Back(), 28);
-			Btn(t, Loc.T("reset.step"), 0.22f, 0.02f, 0.46f, 0.11f, () => Game.ResetStep(), 24);
-			Btn(t, Loc.T("help"), 0.48f, 0.02f, 0.54f, 0.11f, () => Game.OpenHelp(), 28);
-			_nextStepButton = Btn(t, Loc.T("next") + " →", 0.56f, 0.02f, 0.76f, 0.11f, () => Game.NextStep(), 28);
-			_submitButton = Btn(t, Loc.T("submit"), 0.78f, 0.02f, 0.96f, 0.11f, () => Game.Submit(), 28);
+			Btn(t, Loc.T("back"), 0.04f, 0.015f, 0.2f, 0.135f, () => Game.Back(), 28);
+			Btn(t, Loc.T("reset.step"), 0.22f, 0.015f, 0.46f, 0.135f, () => Game.ResetStep(), 24);
+			Btn(t, Loc.T("help"), 0.48f, 0.015f, 0.54f, 0.135f, () => Game.OpenHelp(), 28);
+			_nextStepButton = Btn(t, Loc.T("next") + " →", 0.56f, 0.015f, 0.76f, 0.135f, () => Game.NextStep(), 28);
+			_submitButton = Btn(t, Loc.T("submit"), 0.78f, 0.015f, 0.96f, 0.135f, () => Game.Submit(), 28);
 		}
 
 		GameObject Panel_(StepKind kind, Transform region)

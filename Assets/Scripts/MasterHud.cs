@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ITKamianets.Engine.Input;
+using ITKamianets.Engine.Net;
+using ITKamianets.Engine.Shell;
 using ITKamianets.Engine.UI;
 using UnityEngine;
 using UnityEngine.UI;
@@ -31,6 +33,11 @@ namespace Temnorid.Master
 		GameObject _topBar, _tipBox, _toastBox, _continue;
 		Text _coins, _level, _xp, _activeJob, _tip, _toast, _titleNote;
 		Mode _shown = (Mode)(-1);
+
+		// The shell's bars and the shared workshop.
+		ShellChrome _chrome;
+		Text _presence, _overviewLeft, _overviewRight;
+		float _netAt;
 
 		static readonly string[] Order = { Ids.Stable, Ids.Scribe, Ids.Forge, Ids.Workshop, Ids.Cooking, Ids.Tailor, Ids.Apothecary };
 
@@ -79,7 +86,19 @@ namespace Temnorid.Master
 			UiBuilder.EnsureEventSystem(transform);
 			_ring = UiShapes.Circle(false);
 			_disc = UiShapes.Circle(true);
-			var root = UiBuilder.CreateCanvas(transform).transform;
+			var canvas = UiBuilder.CreateCanvas(transform);
+			_chrome = ShellChrome.Create(transform);
+			_chrome.PlaceSelected += OnPlace;
+
+			// Every screen lives in the frame the shell's bars leave free.
+			var frame = new GameObject("Frame", typeof(RectTransform));
+			frame.transform.SetParent(canvas.transform, false);
+			var frameRect = (RectTransform)frame.transform;
+			frameRect.anchorMin = new Vector2(0f, _chrome.BottomFraction);
+			frameRect.anchorMax = new Vector2(1f, 1f - _chrome.TopFraction);
+			frameRect.offsetMin = Vector2.zero;
+			frameRect.offsetMax = Vector2.zero;
+			var root = frame.transform;
 			BuildHub(root);
 			BuildOrders(root);
 			BuildTask(root);
@@ -89,6 +108,7 @@ namespace Temnorid.Master
 			BuildResult(root);
 			BuildUpgrades(root);
 			BuildJournal(root);
+			BuildOverview(root);
 			BuildHelp(root);
 			BuildPause(root);
 			BuildSettings(root);
@@ -240,12 +260,10 @@ namespace Temnorid.Master
 			var screen = Box("Title", root, 0f, 0f, 1f, 1f, new Color(0.06f, 0.04f, 0.03f, 0.55f));
 			_screens[Mode.Title] = screen;
 			var t = screen.transform;
-			Lbl(t, Loc.T("title"), 92, TextAnchor.MiddleCenter, 0.05f, 0.68f, 0.95f, 0.88f, Gold);
-			Lbl(t, Loc.T("tagline"), 44, TextAnchor.MiddleCenter, 0.1f, 0.6f, 0.9f, 0.7f, Ink);
-			Btn(t, Loc.T("menu.new"), 0.35f, 0.46f, 0.65f, 0.55f, () => Game.RequestNewGame(), 36);
-			_continue = Btn(t, Loc.T("menu.continue"), 0.35f, 0.35f, 0.65f, 0.44f, () => Game.ContinueGame(), 36).gameObject;
-			Btn(t, Loc.T("menu.settings"), 0.35f, 0.24f, 0.65f, 0.33f, () => Game.OpenSettings(), 36);
-			Btn(t, Loc.T("menu.quit"), 0.35f, 0.13f, 0.65f, 0.22f, () => Game.Quit(), 36);
+			Btn(t, Loc.T("menu.new"), 0.35f, 0.58f, 0.65f, 0.7f, () => Game.RequestNewGame(), 36);
+			_continue = Btn(t, Loc.T("menu.continue"), 0.35f, 0.44f, 0.65f, 0.56f, () => Game.ContinueGame(), 36).gameObject;
+			Btn(t, Loc.T("menu.settings"), 0.35f, 0.3f, 0.65f, 0.42f, () => Game.OpenSettings(), 36);
+			Btn(t, Loc.T("menu.main"), 0.35f, 0.16f, 0.65f, 0.28f, () => ShellFlow.QuitToMenu(), 36);
 			_titleNote = Lbl(t, "", 30, TextAnchor.MiddleCenter, 0.1f, 0.06f, 0.9f, 0.12f, new Color(1f, 0.6f, 0.5f));
 			Lbl(t, Loc.T("menu.demo"), 26, TextAnchor.LowerCenter, 0.1f, 0f, 0.9f, 0.05f, Muted);
 		}
@@ -272,9 +290,12 @@ namespace Temnorid.Master
 			_activeJob = Lbl(_topBar.transform, "", 26, TextAnchor.MiddleLeft, 0.6f, 0f, 0.99f, 1f, Muted);
 			_topBar.GetComponent<Image>().raycastTarget = false;
 
-			_tipBox = Box("Tip", root, 0.04f, 0.845f, 0.96f, 0.91f, new Color(0.1f, 0.18f, 0.28f, 0.94f));
-			_tip = Lbl(_tipBox.transform, "", 26, TextAnchor.MiddleLeft, 0.015f, 0f, 0.86f, 1f, new Color(0.8f, 0.9f, 1f), true);
-			Btn(_tipBox.transform, Loc.T("close"), 0.88f, 0.1f, 0.99f, 0.9f, () => Game.DismissTip(), 24);
+			_presence = Lbl(root, "", 22, TextAnchor.UpperRight, 0.5f, 0.82f, 0.99f, 0.912f, Ink, true);
+			_presence.supportRichText = true;
+			_presence.raycastTarget = false;
+			_tipBox = Box("Tip", root, 0.04f, 0.83f, 0.96f, 0.912f, new Color(0.1f, 0.18f, 0.28f, 0.94f));
+			_tip = Lbl(_tipBox.transform, "", 26, TextAnchor.MiddleLeft, 0.015f, 0f, 0.85f, 1f, new Color(0.8f, 0.9f, 1f), true);
+			Btn(_tipBox.transform, Loc.T("close"), 0.86f, 0.06f, 0.99f, 0.94f, () => Game.DismissTip(), 24);
 			_toastBox = Box("Toast", root, 0.2f, 0.838f, 0.8f, 0.905f, new Color(0f, 0f, 0f, 0.85f));
 			_toast = Lbl(_toastBox.transform, "", 28, TextAnchor.MiddleCenter, 0.02f, 0f, 0.98f, 1f, Ink, true);
 			_toastBox.GetComponent<Image>().raycastTarget = false;
@@ -309,10 +330,10 @@ namespace Temnorid.Master
 			for (var i = 0; i < items.Length; i++)
 			{
 				var action = items[i].Item2;
-				Btn(t, items[i].Item1, 0.015f + i * 0.2f, 0.02f, 0.195f + i * 0.2f, 0.11f, () => action(), 28);
+				Btn(t, items[i].Item1, 0.015f + i * 0.2f, 0.015f, 0.195f + i * 0.2f, 0.125f, () => action(), 28);
 			}
-			Btn(t, Loc.T("help"), 0.84f, 0.02f, 0.9f, 0.1f, () => Game.OpenHelp(), 28);
-			Btn(t, Loc.T("pause"), 0.91f, 0.02f, 0.985f, 0.1f, () => Game.Pause(), 24);
+			Btn(t, Loc.T("help"), 0.84f, 0.015f, 0.9f, 0.125f, () => Game.OpenHelp(), 28);
+			Btn(t, Loc.T("pause"), 0.91f, 0.015f, 0.985f, 0.125f, () => Game.Pause(), 24);
 		}
 
 		void RefreshHub()
@@ -382,6 +403,8 @@ namespace Temnorid.Master
 				var active = s.ActiveJobId == job.Id;
 				var best = s.BestScore(job.Id);
 				var state = active ? Loc.T("orders.active") : status == JobStatus.Completed ? Loc.T("orders.completed") + " · " + Loc.T("orders.best") + " " + best : status == JobStatus.Locked ? Loc.T("orders.locked") : Loc.T("orders.available");
+				var by = Game.Net != null && Game.Net.ClaimedByOther(job.Id) ? Game.Net.ClaimerName(job.Id) : null;
+				if (by != null) state += " · " + Loc.T("net.working", by);
 				UiBuilder.SetText(_jobTexts[i], job.Id + " · " + Loc.Title(job.Id) + "\n<size=22>" + Loc.Order(job.Id) + "</size>\n<size=22>" + state + "</size>");
 				var block = Game.TakeBlock(job.Id);
 				var blocked = block != null && !active;
@@ -455,6 +478,104 @@ namespace Temnorid.Master
 			foreach (var h in s.History.Reverse().Take(12)) history.Append(h.id).Append(" · ").Append(h.quality).Append("/100 · +").Append(h.coins).Append(" · +").Append(h.xp).Append('\n');
 			if (s.History.Count == 0) history.Append(Loc.T("journal.none"));
 			UiBuilder.SetText(_journalHistory, history.ToString());
+		}
+
+		// ---- the overview place and the shared workshop ----
+
+		void BuildOverview(Transform root)
+		{
+			var card = Overlay(Mode.Overview, root, 0.04f, 0.04f, 0.96f, 0.9f).transform;
+			Lbl(card, Loc.T("overview.head"), 44, TextAnchor.MiddleCenter, 0.03f, 0.9f, 0.97f, 0.99f, Gold);
+			_overviewLeft = Lbl(card, "", 24, TextAnchor.UpperLeft, 0.03f, 0.12f, 0.48f, 0.9f, Ink, true);
+			_overviewLeft.supportRichText = true;
+			_overviewRight = Lbl(card, "", 22, TextAnchor.UpperLeft, 0.5f, 0.12f, 0.97f, 0.9f, Ink, true);
+			_overviewRight.supportRichText = true;
+			Btn(card, Loc.T("hub"), 0.3f, 0.01f, 0.7f, 0.11f, () => Game.Back(), 30);
+		}
+
+		static string Hex(int colour)
+		{
+			var c = ShellConfig.Current.ColourOf(colour);
+			return "#" + ColorUtility.ToHtmlStringRGB(c);
+		}
+
+		static string DoingText(Presence p)
+		{
+			if (p.Job != null) return Name(p.Profession ?? Ids.Stable) + " · " + p.Job;
+			return p.Profession != null ? Name(p.Profession) : Loc.T("net.hub");
+		}
+
+		void RefreshOverview()
+		{
+			var s = Game.Session;
+			var h = s.Horse;
+			var left = new StringBuilder();
+			left.Append("<color=#EDC25C>").Append(Loc.T("overview.wallet")).Append("</color>\n");
+			left.Append(Loc.T("coins")).Append(": ").Append(s.Coins).Append('\n');
+			left.Append(Loc.T("level")).Append(": ").Append(s.Level).Append(" · ").Append(Loc.T("xp")).Append(": ").Append(s.GlobalXp);
+			left.Append(s.Level < MasterConfig.MaxLevel ? " (" + Loc.T("overview.next", MasterConfig.LevelXp[s.Level] - s.GlobalXp) + ")" : " (" + Loc.T("overview.maxlevel") + ")").Append("\n\n");
+			left.Append("<color=#EDC25C>").Append(Loc.T("overview.horse")).Append("</color>\n");
+			left.Append(h.Name).Append(" · ").Append(Loc.T("horse.stage." + (int)h.Stage)).Append(" · ").Append(Loc.T("horse.level", h.Level)).Append('\n');
+			left.Append(Loc.T(NeedKeys[0])).Append(' ').Append(h.Satiety).Append(" · ").Append(Loc.T(NeedKeys[1])).Append(' ').Append(h.Cleanliness).Append('\n');
+			left.Append(Loc.T(NeedKeys[2])).Append(' ').Append(h.Energy).Append(" · ").Append(Loc.T(NeedKeys[3])).Append(' ').Append(h.Trust).Append("\n\n");
+			left.Append("<color=#EDC25C>").Append(Loc.T("overview.trades")).Append("</color>\n");
+			foreach (var id in Order) left.Append(Name(id)).Append(": ").Append(Loc.T("rank." + s.Rank(id))).Append(" (").Append(s.SkillXp(id)).Append(")\n");
+			UiBuilder.SetText(_overviewLeft, left.ToString());
+
+			var right = new StringBuilder();
+			right.Append("<color=#EDC25C>").Append(Loc.T("net.who")).Append("</color>\n");
+			if (Game.Net == null) right.Append(Loc.T("net.alone")).Append('\n');
+			else
+			{
+				var me = NetSession.Instance.Local;
+				right.Append("<color=").Append(Hex(me != null ? me.Colour : 0)).Append(">●</color> ").Append(ShellProfile.Current.DisplayName).Append(" (").Append(Game.IsGuest ? "" : Loc.T("net.host") + ", ").Append(DoingText(new Presence { Profession = Game.Mode == Mode.Overview ? null : s.SelectedProfession })).Append(")\n");
+				foreach (var p in Game.Net.Others()) right.Append("<color=").Append(Hex(p.Colour)).Append(">●</color> ").Append(p.Name).Append(" (").Append(DoingText(p)).Append(")\n");
+			}
+			right.Append("\n<color=#EDC25C>").Append(Loc.T("overview.board")).Append("</color>\n");
+			foreach (var j in MasterContent.Jobs)
+			{
+				var status = s.StatusOf(j.Id);
+				var by = Game.Net != null ? Game.Net.ClaimerName(j.Id) : (s.ActiveJobId == j.Id ? ShellProfile.Current.DisplayName : null);
+				var state = by != null ? Loc.T("net.working", by) : status == JobStatus.Completed ? Loc.T("orders.completed") : status == JobStatus.Locked ? Loc.T("orders.locked") : Loc.T("overview.free");
+				right.Append(j.Id).Append(" · ").Append(Loc.Title(j.Id)).Append(" — ").Append(state).Append('\n');
+			}
+			UiBuilder.SetText(_overviewRight, right.ToString());
+		}
+
+		void OnPlace(string id)
+		{
+			if (Game == null) return;
+			if (id == MasterShell.PlaceOverview) Game.OpenOverview();
+			else if (id == MasterShell.PlaceWorkshop && Game.Mode == Mode.Overview) Game.Back();
+		}
+
+		/// <summary>The tab bar follows the screen the game is on, and the bar and the presence line show who plays along.</summary>
+		void SyncChrome(Mode mode)
+		{
+			if (_chrome == null) return;
+			if (!_chrome.ProfileOpen)
+			{
+				var want = mode == Mode.Overview ? MasterShell.PlaceOverview : MasterShell.PlaceWorkshop;
+				if (_chrome.CurrentPlace != want) _chrome.Select(want, false);
+			}
+			if (Time.unscaledTime < _netAt) return;
+			_netAt = Time.unscaledTime + 0.5f;
+			var net = Game.Net;
+			if (net == null)
+			{
+				_chrome.SetStatus("");
+				UiBuilder.SetText(_presence, "");
+				return;
+			}
+			var others = net.Others();
+			_chrome.SetStatus(others.Count > 0 ? Loc.T("net.with", others[0].Name) : Loc.T("net.alone"));
+			var sb = new StringBuilder();
+			foreach (var p in others)
+			{
+				if (sb.Length > 0) sb.Append("    ");
+				sb.Append("<color=").Append(Hex(p.Colour)).Append(">●</color> ").Append(p.Name).Append(": ").Append(DoingText(p));
+			}
+			UiBuilder.SetText(_presence, Game.Mode == Mode.Title || !Game.Live ? "" : sb.ToString());
 		}
 
 		// ---- help, pause, settings, confirm ----
@@ -535,7 +656,7 @@ namespace Temnorid.Master
 			{
 				var action = actions[i].action;
 				var x0 = 0.02f + i * 0.128f;
-				_careButtons[i] = Btn(t, actions[i].label, x0, 0.19f, x0 + 0.122f, 0.285f, () => action(), 22);
+				_careButtons[i] = Btn(t, actions[i].label, x0, 0.185f, x0 + 0.122f, 0.3f, () => action(), 22);
 			}
 			var side = Box("Training", t, 0.72f, 0.3f, 0.985f, 0.8f, Panel).transform;
 			Lbl(side, Loc.T("train.head"), 36, TextAnchor.MiddleCenter, 0.03f, 0.85f, 0.97f, 0.99f, Gold);
@@ -567,7 +688,7 @@ namespace Temnorid.Master
 
 		void SetTraining(Button button, Text text, string kind)
 		{
-			var block = Game.Session.TrainingBlock(kind);
+			var block = Game.IsGuest ? "net.trainhost" : Game.Session.TrainingBlock(kind);
 			var dirty = Game.Session.Horse.Cleanliness < 20 ? "\n" + Loc.T("train.dirty") : "";
 			UiBuilder.SetText(text, Loc.T("train." + kind) + "\n<size=20>" + Loc.T("train." + kind + ".tip") + "</size>" + (block != null ? "\n<size=20>" + Loc.T(block) + "</size>" : dirty));
 			Tint(button, block != null ? Disabled : Plain);
@@ -715,6 +836,7 @@ namespace Temnorid.Master
 				_shown = mode;
 			}
 			Refresh(mode);
+			SyncChrome(mode);
 			UpdateTaskInput(mode);
 		}
 
@@ -788,6 +910,9 @@ namespace Temnorid.Master
 					break;
 				case Mode.Journal:
 					RefreshJournal();
+					break;
+				case Mode.Overview:
+					RefreshOverview();
 					break;
 				case Mode.Help:
 					var id = s.SelectedProfession;

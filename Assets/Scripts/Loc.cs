@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Temnorid.Master
 {
@@ -13,7 +14,7 @@ namespace Temnorid.Master
 			{ "menu.new", "Нова гра" },
 			{ "menu.continue", "Продовжити" },
 			{ "menu.settings", "Налаштування" },
-			{ "menu.quit", "Вихід" },
+			{ "menu.main", "Головне меню" },
 			{ "menu.demo", "Гра працює без мережі. Нічого не надсилається." },
 			{ "newconfirm", "Почати нову гру? Увесь поточний прогрес буде стерто." },
 			{ "yes", "Так" },
@@ -35,7 +36,7 @@ namespace Temnorid.Master
 			{ "recovery.newer", "Збереження зроблене новішою версією гри." },
 			{ "recovery.backup", "Спробувати резервну копію" },
 			{ "recovery.new", "Почати нову гру" },
-			{ "recovery.quit", "Вийти" },
+			{ "recovery.quit", "До головного меню" },
 			{ "recovery.nobackup", "Резервної копії немає або вона теж пошкоджена." },
 			{ "task.leave", "Замовлення ще не завершено." },
 			{ "task.continue", "Продовжити" },
@@ -291,6 +292,46 @@ namespace Temnorid.Master
 			{ "reset.confirm", "Скинути весь прогрес? Це не можна скасувати." },
 			{ "controls", "Мишка: клік і перетягування. Пробіл: стрибок, зупинка й удар у такт. Esc: назад. Enter: підтвердити." },
 			{ "saved", "Збережено." },
+
+			// Phones: the same lines for a finger (used instead of the plain key on a phone or tablet).
+			{ "press.t", "Зупинити" },
+			{ "press.stir.t", "Помішати" },
+			{ "press.stitch.t", "Стібок" },
+			{ "trace.hint.t", "Проведіть пальцем по папері вздовж лінії." },
+			{ "hammer.hint.t", "Торкніться кіл по черзі. Круг {0} з 3." },
+			{ "train.STA-OBS.tip.t", "Вісім перешкод, стрибок торканням. Енергія −20." },
+			{ "train.jump.t", "Стрибок" },
+			{ "train.command.t", "Команда" },
+			{ "controls.t", "Торкання й перетягування пальцем. Кнопки «Назад» і «Підтвердити» внизу екрана." },
+
+			// The chrome of the shared shell, the overview and the shared workshop.
+			{ "place.workshop", "Майстерня" },
+			{ "place.overview", "Огляд" },
+			{ "overview.head", "Огляд майстерні" },
+			{ "overview.wallet", "Скарбничка" },
+			{ "overview.horse", "Кінь" },
+			{ "overview.trades", "Ремесла" },
+			{ "overview.board", "Дошка замовлень" },
+			{ "overview.next", "до наступного рівня: {0}" },
+			{ "overview.maxlevel", "найвищий рівень" },
+			{ "overview.free", "вільне" },
+			{ "net.who", "Хто в майстерні" },
+			{ "net.hub", "оглядає майстерню" },
+			{ "net.alone", "Ви в майстерні самі" },
+			{ "net.with", "Разом із: {0}" },
+			{ "net.host", "господар" },
+			{ "net.taken", "Це замовлення вже виконує інший майстер." },
+			{ "net.working", "Працює: {0}" },
+			{ "net.waiting", "Надсилаємо результат господарю…" },
+			{ "net.claiming", "Просимо замовлення в господаря…" },
+			{ "net.rejected", "Господар не прийняв результат. Спробуйте ще раз." },
+			{ "net.trainhost", "Тренування проводить господар майстерні." },
+			{ "net.noreset", "У спільній майстерні прогрес не скидають." },
+			{ "net.left", "{0} залишає майстерню." },
+			{ "net.done", "{0}: {1} виконано (+{2} монет)" },
+			{ "net.cared", "{0} доглядає за конем." },
+			{ "net.bought", "{0} купує покращення." },
+			{ "net.syncing", "Чекаємо стан майстерні від господаря…" },
 		};
 
 		// ---- the commissions: titles, stories and explanations ----
@@ -325,7 +366,12 @@ namespace Temnorid.Master
 		public static bool HasJob(string jobId) => Jobs.ContainsKey(jobId);
 
 		/// <summary>The text for a key. A missing key shows the key itself, so a gap is visible rather than silent.</summary>
-		public static string T(string key) => Table.TryGetValue(key, out var text) ? text : key;
+		public static string T(string key)
+		{
+			// On a phone or tablet a line may have its own wording (no keys, a finger instead of a mouse): the same key with ".t".
+			if (Application.isMobilePlatform && Table.TryGetValue(key + ".t", out var touch)) return touch;
+			return Table.TryGetValue(key, out var text) ? text : key;
+		}
 
 		public static string T(string key, params object[] args) => string.Format(T(key), args);
 

@@ -4,6 +4,8 @@ using ITKamianets.Engine.UI;
 using System.Collections.Generic;
 using System.Linq;
 using ITKamianets.Engine.Input;
+using ITKamianets.Engine.Net;
+using ITKamianets.Engine.Shell;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -27,6 +29,8 @@ namespace Temnorid.Master
 		Pause,
 		Settings,
 		ConfirmReset,
+		/// <summary>The wallet, level, horse and trades at a glance, and who is in the workshop.</summary>
+		Overview,
 	}
 
 	public enum StepKind
@@ -127,6 +131,11 @@ namespace Temnorid.Master
 		public MasterSession Session { get; private set; } = new MasterSession();
 		public MasterSettings Settings { get; private set; } = new MasterSettings();
 		public MasterSaveStore Store { get; private set; }
+		/// <summary>The link to the other players of a shared workshop, or null when playing alone.</summary>
+		public MasterNet Net { get; private set; }
+		/// <summary>False for a guest (its own offline save is never touched online) and after an unreadable save the host could not use.</summary>
+		public bool SaveEnabled { get; set; } = true;
+		public bool IsGuest => Net != null && Net.IsClient;
 
 		public Mode Mode { get; private set; } = Mode.Title;
 		public Mode Return { get; private set; } = Mode.Hub;
@@ -180,6 +189,12 @@ namespace Temnorid.Master
 			Settings = Store.LoadSettings();
 			ApplySettings();
 			RefreshSave();
+			ShellFlow.BeforeQuit += OnBeforeQuit;
+		}
+
+		void OnBeforeQuit()
+		{
+			if (Live) SaveNow();
 		}
 
 		void Start()
@@ -187,12 +202,105 @@ namespace Temnorid.Master
 			SetMode(Mode.Title, true);
 			Horse.Apply(Session.Horse, true);
 			Track.Show(false);
+			if (NetSession.Instance.IsOnline) BeginOnline();
 		}
 
 		void OnDestroy()
 		{
+			ShellFlow.BeforeQuit -= OnBeforeQuit;
 			if (Instance == this) Instance = null;
 		}
+
+		// ---- the shared workshop ----
+
+		/// <summary>An online game skips the title: the host opens its own save (or a new game) and a guest waits for the host's state.</summary>
+		void BeginOnline()
+		{
+			Net = gameObject.AddComponent<MasterNet>();
+			Net.Init(this);
+			if (Net.IsClient)
+			{
+				SaveEnabled = false;
+				StartSession(new MasterSession());
+				Toast(Loc.T("net.syncing"), 4f);
+				return;
+			}
+			var saved = Store.Load(out var status);
+			if (status == SaveStatus.Ok && saved != null)
+			{
+				var session = new MasterSession();
+				session.Load(saved);
+				session.ApplyElapsed(DateTime.UtcNow);
+				StartSession(session);
+				return;
+			}
+			// A save that cannot be read is left alone for a later solo game.
+			if (status == SaveStatus.Corrupt || status == SaveStatus.UnsupportedVersion) SaveEnabled = false;
+			StartSession(new MasterSession());
+		}
+
+		/// <summary>A guest has a new state from the host: the horse's size follows its level.</summary>
+		public void OnSharedState()
+		{
+			Horse.Apply(Session.Horse);
+		}
+
+		public void Save() => SaveNow();
+
+		public void ShowCare(CareResult result) => Report(result);
+
+		public void ShowBought(string id, bool ok)
+		{
+			if (ok)
+			{
+				Audio.Play(Sfx.Coin);
+				Toast(Loc.T("up.bought", Loc.T(id)));
+			}
+			else Toast(Loc.T("up.short"));
+		}
+
+		public void OnClaimGranted(string jobId)
+		{
+			if (Mode == Mode.Orders && Session.ActiveJobId == null && Session.Accept(jobId)) BeginAccepted();
+			else Net.Release(jobId);
+		}
+
+		public void OnClaimDenied(string reasonKey)
+		{
+			Toast(Loc.T(reasonKey));
+			Audio.Play(Sfx.Bad, 0.4f);
+		}
+
+		/// <summary>The host paid this guest's order: the result screen shows what the host paid.</summary>
+		public void OnRemotePaid(Receipt receipt)
+		{
+			Session.ApplyRemoteReceipt(receipt);
+			ResultTraining = false;
+			ResultSuccess = true;
+			LeveledUp = receipt.LevelAfter > receipt.LevelBefore;
+			RankedUp = receipt.RankAfter > receipt.RankBefore;
+			HorseLeveled = false;
+			Audio.Play(Sfx.Good);
+			Audio.Play(Sfx.Coin, 0.7f);
+			if (LeveledUp || RankedUp) Audio.Play(Sfx.LevelUp, 0.6f);
+			SelectedPartClear();
+			SetMode(Mode.Result);
+		}
+
+		public void OnRemoteRejected(string reason)
+		{
+			Toast(Loc.T("net.rejected"));
+			Audio.Play(Sfx.Bad, 0.5f);
+			if (reason != "claim") return;
+			// The host does not know this order as ours (it restarted or gave it away): drop it and let the guest take it again.
+			Session.Abandon();
+			SelectedPartClear();
+			Step = 0;
+			if (Mode == Mode.Task) SetMode(Mode.Orders);
+		}
+
+		/// <summary>The host left or the connection dropped.</summary>
+		public void LeaveOnline() => ShellFlow.QuitToMenu();
 
 		// ---- starting, saving ----
 
@@ -286,6 +394,7 @@ namespace Temnorid.Master
 
 		public void SaveNow()
 		{
+			if (!SaveEnabled) return;
 			if (Store.Save(Session.ToSave(DateTime.UtcNow))) Saves++;
 			RefreshSave();
 		}
@@ -331,6 +440,7 @@ namespace Temnorid.Master
 				case Mode.Hub:
 				case Mode.Upgrades:
 				case Mode.Journal:
+				case Mode.Overview:
 					return "hub";
 				case Mode.Orders:
 					return Session.SelectedProfession + ".overview";
@@ -364,7 +474,7 @@ namespace Temnorid.Master
 			if (Live)
 			{
 				var dt = Time.unscaledDeltaTime;
-				Session.Tick(dt);
+				if (!IsGuest) Session.Tick(dt);
 				Session.Touch(DateTime.UtcNow);
 				if (Time.unscaledTime >= _nextSave)
 				{
@@ -393,7 +503,7 @@ namespace Temnorid.Master
 		void PickStation(EngineInput input)
 		{
 			var screen = input.UI.Point.ReadValue<Vector2>();
-			var overUi = EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+			var overUi = (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) || (ShellChrome.Current != null && ShellChrome.Current.ProfileOpen);
 			string hit = null;
 			if (!overUi && Cam != null && !Cam.Blending && screen != Vector2.zero)
 			{
@@ -442,6 +552,13 @@ namespace Temnorid.Master
 			if (Mode == Mode.Hub) SetMode(Mode.Journal);
 		}
 
+		/// <summary>The overview place: from the hub, the order lists, the stable, the journal, the upgrades or a task (which stays as it is).</summary>
+		public void OpenOverview()
+		{
+			if (Mode == Mode.Hub || Mode == Mode.Orders || Mode == Mode.Stable || Mode == Mode.Journal || Mode == Mode.Upgrades || Mode == Mode.Task)
+				SetMode(Mode.Overview);
+		}
+
 		public void OpenHelp()
 		{
 			if (Mode == Mode.Title || Mode == Mode.Help) return;
@@ -470,6 +587,11 @@ namespace Temnorid.Master
 
 		public void ToTitle()
 		{
+			if (Net != null)
+			{
+				ShellFlow.QuitToMenu();
+				return;
+			}
 			if (Mode == Mode.Pause || Mode == Mode.Hub) SaveNow();
 			RefreshSave();
 			SetMode(Mode.Title);
@@ -539,6 +661,11 @@ namespace Temnorid.Master
 
 		public void RequestReset()
 		{
+			if (Net != null)
+			{
+				Toast(Loc.T("net.noreset"));
+				return;
+			}
 			if (Mode == Mode.Settings) SetMode(Mode.ConfirmReset);
 		}
 
@@ -594,14 +721,33 @@ namespace Temnorid.Master
 				Toast(Loc.T("train.job"));
 				return false;
 			}
+			if (Net != null && Net.ClaimedByOther(jobId))
+			{
+				Toast(Loc.T("net.taken"));
+				return false;
+			}
+			if (IsGuest)
+			{
+				// The host decides who gets an order: the task opens when it says yes.
+				if (!Net.Synced) { Toast(Loc.T("net.syncing")); return false; }
+				if (!Session.CanAccept(jobId)) return false;
+				Net.RequestClaim(jobId);
+				Toast(Loc.T("net.claiming"));
+				return true;
+			}
 			if (!Session.Accept(jobId)) return false;
+			BeginAccepted();
+			return true;
+		}
+
+		void BeginAccepted()
+		{
 			Step = 0;
 			BeginStep();
 			SelectedPartClear();
 			Audio.Play(Sfx.Page);
 			SaveNow();
 			SetMode(Mode.Task);
-			return true;
 		}
 
 		/// <summary>Why a commission cannot be taken right now (a key of <see cref="Loc"/>), or null.</summary>
@@ -610,12 +756,14 @@ namespace Temnorid.Master
 			if (Session.StatusOf(jobId) == JobStatus.Locked) return "orders.locked";
 			if (Session.ActiveJobId != null && Session.ActiveJobId != jobId) return "train.job";
 			if (Session.TrainingActive) return "train.busy";
+			if (Net != null && Net.ClaimedByOther(jobId)) return "net.taken";
 			return null;
 		}
 
 		public void AbandonActive()
 		{
 			if (Session.ActiveJobId == null) return;
+			if (IsGuest) Net.Release(Session.ActiveJobId);
 			Session.Abandon();
 			SelectedPartClear();
 			Step = 0;
@@ -914,6 +1062,7 @@ namespace Temnorid.Master
 				Toast(Loc.T("need.before"));
 				return false;
 			}
+			if (IsGuest) return SubmitAsGuest();
 			var level = Session.Level;
 			var rank = Session.Rank(Session.SelectedProfession);
 			var receipt = Session.Submit();
@@ -935,6 +1084,25 @@ namespace Temnorid.Master
 			}
 			SaveNow();
 			SetMode(Mode.Result);
+			return true;
+		}
+
+		/// <summary>A guest judges its own answers for the screen; a pass is sent to the host, which judges again, pays and answers.</summary>
+		bool SubmitAsGuest()
+		{
+			if (Net.Pending) return false;
+			var outcome = Session.Judge();
+			if (outcome == null || !outcome.Success)
+			{
+				ResultTraining = false;
+				ResultSuccess = false;
+				LeveledUp = RankedUp = HorseLeveled = false;
+				Audio.Play(Sfx.Bad);
+				SetMode(Mode.Result);
+				return true;
+			}
+			Net.RequestSubmit();
+			Toast(Loc.T("net.waiting"));
 			return true;
 		}
 
@@ -989,16 +1157,22 @@ namespace Temnorid.Master
 			SaveNow();
 		}
 
-		public void FeedHay() => Report(Session.FeedHay());
-		public void FeedRation() => Report(Session.FeedRation());
-		public void Groom() => Report(Session.Groom(DateTime.UtcNow));
-		public void PetIt() => Report(Session.Pet(DateTime.UtcNow));
-		public void Rest() => Report(Session.Rest());
+		public void FeedHay() { if (IsGuest) Net.RequestCare("hay"); else Report(Session.FeedHay()); }
+		public void FeedRation() { if (IsGuest) Net.RequestCare("ration"); else Report(Session.FeedRation()); }
+		public void Groom() { if (IsGuest) Net.RequestCare("groom"); else Report(Session.Groom(DateTime.UtcNow)); }
+		public void PetIt() { if (IsGuest) Net.RequestCare("pet"); else Report(Session.Pet(DateTime.UtcNow)); }
+		public void Rest() { if (IsGuest) Net.RequestCare("rest"); else Report(Session.Rest()); }
 
 		/// <summary>Starts a training. Returns false (with a reason on screen) when it may not start.</summary>
 		public bool StartTraining(string kind)
 		{
 			if (Mode != Mode.Stable) return false;
+			if (IsGuest)
+			{
+				Toast(Loc.T("net.trainhost"));
+				Audio.Play(Sfx.Bad);
+				return false;
+			}
 			var block = Session.TrainingBlock(kind);
 			if (block != null)
 			{
@@ -1136,6 +1310,11 @@ namespace Temnorid.Master
 		public bool Buy(string id)
 		{
 			if (Mode != Mode.Upgrades) return false;
+			if (IsGuest)
+			{
+				Net.RequestBuy(id);
+				return true;
+			}
 			if (!Session.Buy(id))
 			{
 				if (!Session.Has(id)) Toast(Loc.T("up.short"));
@@ -1155,10 +1334,7 @@ namespace Temnorid.Master
 			SaveNow();
 		}
 
-		public void Quit()
-		{
-			SaveNow();
-			UiShapes.Quit();
-		}
+		/// <summary>Back to the shell's landing screen (the shell has the Quit button); the progress is saved first.</summary>
+		public void Quit() => ShellFlow.QuitToMenu();
 	}
 }

@@ -1,10 +1,10 @@
 # Temnorid: Master (Темнорід: Майстер)
 
-**A medieval workshop career game: learn seven trades in one village workshop.** A short, offline game for **Windows**, in the world of [Temnorid](https://temnorid.com), built on the [IT Kamianets 3D Engine](https://3d.itkamianets.com) with Unity 6000.6. The game's text is in Ukrainian.
+**A medieval workshop career game: learn seven trades in one village workshop.** A short, offline game for **Windows** (and Android and iOS builds from Unity Build Profiles), in the world of [Temnorid](https://temnorid.com), built on the [IT Kamianets 3D Engine](https://3d.itkamianets.com) with Unity 6000.6. The game's text is in Ukrainian.
 
-It replaces the separate Pets and Scribe games: the foal, its care and its two trainings are the **Stable**, the Academy desk is the **Scribe**, and five more trades (forge, workshop, kitchen, tailor, herbalist) share one wallet, one level and one save. You choose a trade from the hub, take an order, do a few short hands-on steps with the mouse and are paid for the quality of your work. A wrong answer is never punished: you are told why and try again for free. No avatar, no walking, no connection of any kind.
+It replaces the separate Pets and Scribe games: the foal, its care and its two trainings are the **Stable**, the Academy desk is the **Scribe**, and five more trades (forge, workshop, kitchen, tailor, herbalist) share one wallet, one level and one save. You choose a trade from the hub, take an order, do a few short hands-on steps with the mouse and are paid for the quality of your work. A wrong answer is never punished: you are told why and try again for free. No avatar, no walking. It is a single-player game first; playing with others is optional.
 
-**Status:** version 0.1.0, first playable MVP. Website: https://master.temnorid.com · Download: [Temnorid-Master-Setup.exe](https://github.com/WebArtWork/master.temnorid.com/releases/latest/download/Temnorid-Master-Setup.exe).
+**Status:** version 0.2.0: the first playable MVP plus the shared shell (splash, main menu, lobby, profile, top and bottom bars), light co-op for up to four, Android and iOS readiness and Windows auto-update. Website: https://master.temnorid.com · Download: [Temnorid-Master-Setup.exe](https://github.com/WebArtWork/master.temnorid.com/releases/latest/download/Temnorid-Master-Setup.exe).
 
 ## How it plays
 
@@ -25,7 +25,27 @@ It replaces the separate Pets and Scribe games: the foal, its care and its two t
 | Choose, press, drag | Mouse (left button) |
 | Stop the bar, stir, stitch, jump, give a command | Space, or the big on-screen button |
 | Back, close, pause | Esc |
+| Phones and tablets | Touch: tap, drag a finger to trace or place the seal, tap the anvil; the big on-screen buttons replace Space |
 | Menus | Mouse, or arrows and Enter |
+
+## Playing with others
+
+From the shell's main menu choose **Play with others**: one player hosts (a direct IP address, or a join code through Unity Relay once the project is linked to a Unity Cloud project), up to four join, and everybody opens the same workshop. This is light co-op, not a race:
+
+- The **host** owns the order board and the shared wallet, level, ranks, upgrades and horse (the host's `MasterSession`), judges and pays every order, and saves the shared state to its own save. A guest never overwrites its own offline save while online, and the shared workshop has no "reset progress".
+- Each player works on **their own task** on their own screen (the trade steps are local and deterministic). When a guest confirms, the host re-scores the answers with `TaskScoring`, pays the shared wallet, marks the order done for everybody and republishes the state, so all screens agree.
+- **Two players never hold the same order**: the host grants an order to one player at a time (the host's own open order counts); the others see "Працює: name". Leaving the session gives your order back.
+- **Presence:** the bar under the top line shows who is in which trade and on which order; the **Огляд** place lists the players, the shared wallet, level, horse, ranks and the 12-order board.
+- The horse is shared: guests can feed, groom, pet and let it rest and buy upgrades (the host does it on the shared wallet). **Trainings are only for the host.**
+- If the host leaves, everybody returns to the main menu.
+
+## Updates
+
+The Windows game updates itself from the newest GitHub release (`WebArtWork/master.temnorid.com`) when it starts; the Profile place can turn that off. The installer runs silently and starts the game again.
+
+## Phones
+
+Android (minimum API 26) and iOS 15 builds come from Unity Build Profiles (the shell's `ShellSceneKit` sets the application id `com.itkamianets.master`, landscape, IL2CPP, ARM64). All mini-games are pointer driven, so a finger works like the mouse (trace, seal, anvil); every key has an on-screen button and bottom bars sit under the thumb. iOS needs a Mac or CI to build; the Android and iOS builds were not run on a device.
 
 ## Run it
 
@@ -42,25 +62,27 @@ Unity.exe -batchmode -nographics -projectPath . -executeMethod Temnorid.Master.E
 "ISCC.exe" installer\Master.iss
 ```
 
-(Do not pass `-quit` together with `-runTests`.) The build is `Builds/Windows/TemnoridMaster/TemnoridMaster.exe` with its `_Data` folder, zipped as `Builds/Windows/Temnorid-Master-v0.1.0-win-x64.zip`; the installer is `Builds/Installer/Temnorid-Master-Setup.exe`. `TEST_REPORT.md` says what the tests expect and what was observed.
+(Do not pass `-quit` together with `-runTests`.) The build is `Builds/Windows/TemnoridMaster/TemnoridMaster.exe` with its `_Data` folder, zipped as `Builds/Windows/Temnorid-Master-v0.2.0-win-x64.zip`; the installer is `Builds/Installer/Temnorid-Master-Setup.exe`. `TEST_REPORT.md` says what the tests expect and what was observed.
 
 ## Layout
 
 ```text
-Assets/Scenes/Master.unity      the one scene: title screen, hub, workstations, stable and screens
+Assets/Scenes/                  Boot, Menu (the shell) and Master.unity (the game: title screen, hub, workstations, stable and screens)
 Assets/Scripts/                 MasterContent (the authored game), TaskScoring (the scoring of every trade), Horse,
                                 MasterSession (the one authority: wallet, orders, stable, save data), MiniGames
                                 (obstacle run and command timing), Loc (all text), MasterGame (the game as played),
                                 MasterHud (+ .Task: every screen), ViewCamera, Station, HorseView, YardTrack,
                                 MasterAudio, MasterSaveStore
-Assets/Scripts/Editor/          MasterSceneBuilder, MasterReleaseBuilder
+Assets/Scripts/MasterShell.cs   the shell configuration (title, places, repo, max players)
+Assets/Scripts/MasterNet.cs     the shared workshop (online code, see "Authority rules")
+Assets/Scripts/Editor/          MasterSceneBuilder (also builds the Boot and Menu scenes), MasterReleaseBuilder
 Assets/Tests/                   EditMode and PlayMode
 design/                         the design documents this game was built from (README, GAME, CONTENT, ACTIVITIES, UI, MVP, AGENT, QA_RELEASE)
 docs/index.html, docs/CNAME     the website (master.temnorid.com)
 installer/Master.iss            Inno Setup script
 ```
 
-Packages (all local, see `Packages/manifest.json`): `3d-unity-core`, `3d-unity-input` (the only input entry point, including the pointer for tracing, sealing and the anvil), `3d-unity-save` (atomic save, with the previous good save kept as a backup), `3d-unity-ui` (screens), `3d-unity-synth` (the generated sounds), `3d-unity-graybox` (asset ids, scene builder helpers), `3d-unity-feedback` and `3d-unity-combat` (only because feedback depends on it). No `3d-master-*` package exists; all game logic is in this game.
+Packages (all local, see `Packages/manifest.json`): `3d-unity-net`, `3d-unity-shell`, `3d-unity-update`, `3d-unity-core`, `3d-unity-input` (the only input entry point, including the pointer for tracing, sealing and the anvil), `3d-unity-save` (atomic save, with the previous good save kept as a backup), `3d-unity-ui` (screens), `3d-unity-synth` (the generated sounds), `3d-unity-graybox` (asset ids, scene builder helpers), `3d-unity-feedback` and `3d-unity-combat` (only because feedback depends on it). No `3d-master-*` package exists; all game logic is in this game.
 
 ## Gap report and differences from the guides
 
@@ -76,8 +98,16 @@ Packages (all local, see `Packages/manifest.json`): `3d-unity-core`, `3d-unity-i
 
 - Played by tests (the game's own commands, plus a virtual mouse drawing the mark, dragging the seal and clicking the anvil through the real screens) and looked at in the editor's 1280×720 game view (hub, orders, every kind of step, the stable, both trainings, results, upgrades, journal); not played by a human from start to finish with a real mouse, and the Windows installer was built but not installed.
 - The screens were not checked one by one at 1920×1080 and 1280×720 on a real monitor.
-- No gamepad or touch build, no English text, no music; the sounds are simple generated tones.
-- No cloud, no accounts and no multiplayer, by design: a local game can be edited, so nothing in it may ever grant anything elsewhere.
+- No gamepad, no English text, no music; the sounds are simple generated tones.
+- No cloud and no accounts, by design: a local game can be edited, so nothing in it may ever grant anything elsewhere. The online mode is light co-op only (see above); the host is trusted with the save, and a guest's answers are only checked by re-scoring (plausible keys, no faster than a few seconds, paid once per attempt).
+- The two-player online test runs in one process (a detached guest session sending the real events); two real machines, Relay codes, Android/iOS devices and the self-update were not run.
+
+## Authority rules (developer notes)
+
+- `MasterSession` is the one authority: on the host it is the shared state; a guest's session is only a mirror (`LoadShared` keeps the guest's own order, answers, attempt ids, help flags and selected trade). Only the host runs `Tick`, saves and pays (`CommitRemote`, `Pay`).
+- Online code is `MasterNet.cs`: events `ms.hello/state/claim/claimok/claimno/release/submit/paid/reject/care/careres/buy/buyres`, 12 order entities (ids 1 to 12), poses carry the trade (State) and order (A). Tunable: `MasterNet.MinWorkSeconds` (3 s).
+- Test ports: 7809 (`OnlineMasterTests`). Version 0.2.0 means builds play together only on the same major.minor.
+- Not changed by online play: single-player numbers and rules (the 45 edit and 18 play tests still pass; 5 edit and 1 play test were added).
 
 ## Release
 

@@ -14,7 +14,9 @@
     "ITKamianets.Engine.Graybox",
     "ITKamianets.Engine.UI",
     "ITKamianets.Engine.Save",
-    "ITKamianets.Engine.Synth"
+    "ITKamianets.Engine.Synth",
+    "ITKamianets.Engine.Shell",
+    "ITKamianets.Engine.Net"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
