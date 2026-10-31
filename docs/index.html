@@ -4,58 +4,95 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Temnorid: Master</title>
-	<meta name="description" content="Temnorid: Master is a cozy workshop game, alone or with up to three friends: learn seven trades (stable, scribe, forge, workshop, kitchen, tailor, herbalist), do short hands-on orders, raise a foal and earn coins and experience. Windows, free.">
+	<meta name="description" content="Learn seven trades in Temnorid: Master. Raise a foal, forge, cook and complete hands-on orders in a shared workshop. Ukrainian game text.">
 	<link rel="canonical" href="https://master.temnorid.com/">
+	<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+	<link rel="icon" type="image/png" href="/favicon.png" sizes="48x48">
+	<link rel="icon" type="image/svg+xml" href="/favicon.svg" sizes="any">
+	<link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
 	<meta property="og:type" content="website">
+	<meta property="og:site_name" content="Temnorid: Master">
 	<meta property="og:title" content="Temnorid: Master">
-	<meta property="og:description" content="Seven trades in one village workshop.">
+	<meta property="og:description" content="Learn seven trades in Temnorid: Master. Raise a foal, forge, cook and complete hands-on orders in a shared workshop. Ukrainian game text.">
 	<meta property="og:url" content="https://master.temnorid.com/">
+	<meta property="og:locale" content="en_US">
+	<meta property="og:image" content="https://master.temnorid.com/seo-image.png">
+	<meta property="og:image:type" content="image/png">
+	<meta property="og:image:width" content="1200">
+	<meta property="og:image:height" content="630">
+	<meta property="og:image:alt" content="Temnorid: Master — Seven trades · One workshop">
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="Temnorid: Master">
+	<meta name="twitter:description" content="Learn seven trades in Temnorid: Master. Raise a foal, forge, cook and complete hands-on orders in a shared workshop. Ukrainian game text.">
+	<meta name="twitter:image" content="https://master.temnorid.com/seo-image.png">
+	<meta name="twitter:image:alt" content="Temnorid: Master — Seven trades · One workshop">
 	<meta name="theme-color" content="#17120d">
-	<style>
-		:root { --accent: #e0b062; --bg: #17120d; --panel: #241b13; --line: #3d3023; --text: #eceae4; --muted: #a9acb8; }
-		* { box-sizing: border-box; }
-		html { scroll-behavior: smooth; }
-		body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-		a { color: var(--accent); }
-		.wrap { max-width: 880px; margin: 0 auto; padding: 0 20px; }
-		header.site { border-bottom: 1px solid var(--line); }
-		header.site .wrap { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; padding-bottom: 14px; }
-		.brand { font-weight: 700; color: var(--text); text-decoration: none; letter-spacing: .02em; }
-		nav a { margin-left: 18px; color: var(--muted); text-decoration: none; font-size: 15px; }
-		nav a:hover { color: var(--text); }
-		.hero { padding: 72px 0 56px; border-bottom: 1px solid var(--line); background: radial-gradient(900px 300px at 50% -10%, color-mix(in srgb, var(--accent) 20%, transparent), transparent); }
-		.eyebrow { color: var(--accent); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; font-size: 13px; margin: 0 0 10px; }
-		h1 { font-size: clamp(36px, 7vw, 60px); line-height: 1.08; margin: 0 0 12px; }
-		.tagline { font-size: 22px; margin: 0 0 18px; }
-		.lead { color: var(--muted); max-width: 640px; margin: 0 0 28px; }
-		.btn { display: inline-block; background: var(--accent); color: #17120d; font-weight: 700; padding: 13px 24px; border-radius: 10px; text-decoration: none; }
-		.btn[aria-disabled="true"] { background: var(--line); color: var(--muted); cursor: not-allowed; }
-		.fine { color: var(--muted); font-size: 14px; margin: 14px 0 0; }
-		section { padding: 48px 0; border-bottom: 1px solid var(--line); }
-		h2 { font-size: 28px; margin: 0 0 16px; }
-		h3 { font-size: 18px; margin: 24px 0 8px; }
-		p { margin: 0 0 14px; }
-		ol, ul { padding-left: 22px; margin: 0 0 14px; }
-		li { margin-bottom: 8px; }
-		table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 10px; overflow: hidden; }
-		th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
-		th { color: var(--muted); font-weight: 600; font-size: 14px; }
-		tr:last-child td { border-bottom: 0; }
-		td:first-child { white-space: nowrap; font-weight: 600; }
-		.cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
-		.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
-		.card h3 { margin-top: 0; }
-		.shot { background: var(--panel); border: 1px dashed var(--line); border-radius: 12px; padding: 38px 18px; text-align: center; color: var(--muted); }
-		.note { background: var(--panel); border-left: 3px solid var(--accent); padding: 14px 16px; border-radius: 6px; color: var(--muted); }
-		footer { padding: 32px 0 56px; color: var(--muted); font-size: 14px; }
-		:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-		@media (max-width: 560px) { nav a:not(:last-child) { display: none; } }
-	</style>
+	<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://master.temnorid.com/#website",
+      "name": "Temnorid: Master",
+      "url": "https://master.temnorid.com/",
+      "inLanguage": "en",
+      "image": "https://master.temnorid.com/seo-image.png",
+      "about": {
+        "@id": "https://master.temnorid.com/#game"
+      }
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://master.temnorid.com/#webpage",
+      "name": "Temnorid: Master",
+      "url": "https://master.temnorid.com/",
+      "description": "Learn seven trades in Temnorid: Master. Raise a foal, forge, cook and complete hands-on orders in a shared workshop. Ukrainian game text.",
+      "isPartOf": {
+        "@id": "https://master.temnorid.com/#website"
+      },
+      "about": {
+        "@id": "https://master.temnorid.com/#game"
+      },
+      "primaryImageOfPage": {
+        "@type": "ImageObject",
+        "url": "https://master.temnorid.com/seo-image.png",
+        "width": 1200,
+        "height": 630
+      }
+    },
+    {
+      "@type": "VideoGame",
+      "@id": "https://master.temnorid.com/#game",
+      "name": "Temnorid: Master",
+      "url": "https://master.temnorid.com/",
+      "description": "Learn seven trades in Temnorid: Master. Raise a foal, forge, cook and complete hands-on orders in a shared workshop. Ukrainian game text.",
+      "image": "https://master.temnorid.com/seo-image.png",
+      "thumbnailUrl": "https://master.temnorid.com/logo.png",
+      "genre": "Simulation",
+      "gamePlatform": "Windows",
+      "operatingSystem": "Windows 10 or later, 64-bit",
+      "softwareVersion": "0.1.0",
+      "downloadUrl": "https://github.com/WebArtWork/master.temnorid.com/releases/latest/download/Temnorid-Master-Setup.exe",
+      "releaseNotes": "https://github.com/WebArtWork/master.temnorid.com/releases/tag/v0.1.0",
+      "isAccessibleForFree": true,
+      "inLanguage": "uk",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Temnorid",
+        "url": "https://temnorid.com/"
+      }
+    }
+  ]
+}
+</script>
+	<link rel="stylesheet" href="./site.css">
 </head>
 <body>
+<a class="skip-link" href="#main">Skip to content</a>
 	<header class="site">
 		<div class="wrap">
-			<a class="brand" href="./">Temnorid: Master</a>
+			<a class="brand" href="./"><img src="./logo.svg" alt="" width="44" height="44">Temnorid: Master</a>
 			<nav aria-label="Main menu">
 				<a href="#about">About</a>
 				<a href="#trades">Seven trades</a>
@@ -65,29 +102,22 @@
 		</div>
 	</header>
 
-	<main>
-		<div class="hero">
-			<div class="wrap">
-				<p class="eyebrow">A Temnorid game · Windows · Android and iOS builds not published yet · version 0.2.0</p>
+	<main id="main" tabindex="-1">
+		<div class="hero"><div class="wrap hero-grid"><div class="hero-copy">
+				<p class="eyebrow">A village workshop</p>
 				<h1>Temnorid: Master</h1>
 				<p class="tagline">Choose a trade. Do the work. Earn your name.</p>
-				<p class="lead">A warm medieval workshop where you learn seven trades with your own hands: raise and train a foal, verify and seal documents, forge, build mechanisms, cook, sew and prepare herbs. Short orders, direct mouse work, fair retries. The text of the game is in Ukrainian.</p>
+				<p class="lead">Learn seven trades through short, hands-on workshop orders.</p>
 				<a class="btn" href="https://github.com/WebArtWork/master.temnorid.com/releases/latest/download/Temnorid-Master-Setup.exe">Download for Windows</a>
-				<p class="fine">Free · Windows 10 or newer.</p>
-			</div>
-		</div>
+				<p class="fine">Free · Windows 10 or later, 64-bit<br>In development<br>Game text: Ukrainian</p>
+			</div><figure class="brand-art"><img src="./logo.svg" alt="" width="1024" height="1024"><figcaption>Seven trades · One workshop</figcaption></figure></div></div>
 
-		<section id="about">
-			<div class="wrap">
-				<h2>About</h2>
+		<section id="about" aria-labelledby="about-title"><div class="wrap section-grid"><div class="section-intro"><h2 id="about-title">About</h2></div><div class="section-body"><p>A warm medieval workshop where you learn seven trades with your own hands: raise and train a foal, verify and seal documents, forge, build mechanisms, cook, sew and prepare herbs. Short orders, direct mouse work, fair retries. The text of the game is in Ukrainian.</p>
 				<p>You are a young villager in a shared workshop. There is no walking around and no punishment: you pick a trade from the hub, take an order, do one to three short hands-on steps and are paid for the quality of your work. A wrong answer or a broken mechanism only means you are told why and can try again for free. One wallet, one level and one save cover every trade. A session takes a few minutes; all twelve orders and both trainings take about an hour.</p>
 				<p class="note"><strong>Your workshop stays on your PC.</strong> An account is optional, and the game does not read or write anything in Lords or any other game. All names, seals and symbols are invented for the game, and the herb sets are decorative, not medicine.</p>
-			</div>
-		</section>
+			</div></div></section>
 
-		<section id="trades">
-			<div class="wrap">
-				<h2>Seven trades, twelve orders</h2>
+		<section id="trades" aria-labelledby="trades-title"><div class="wrap section-grid"><div class="section-intro"><h2 id="trades-title">Seven trades, twelve orders</h2></div><div class="section-body">
 				<div class="cards">
 					<div class="card"><h3>Stable</h3><p>Feed, groom, pet and rest a foal, then train it on an obstacle course and with command timing. It grows as it levels.</p></div>
 					<div class="card"><h3>Scribe</h3><p>Compare a document with its reference, trace a mark and press the right seal in the right place.</p></div>
@@ -100,14 +130,11 @@
 				</div>
 				<h3>Screenshots</h3>
 				<div class="shot">Screenshots will appear with the first release.</div>
-			</div>
-		</section>
+			</div></div></section>
 
-		<section id="controls">
-			<div class="wrap">
-				<h2>Controls</h2>
+		<section id="controls" aria-labelledby="controls-title"><div class="wrap section-grid"><div class="section-intro"><h2 id="controls-title">Controls</h2></div><div class="section-body">
 				<table>
-					<thead><tr><th>Action</th><th>Input</th></tr></thead>
+					<thead><tr><th scope="col">Action</th><th scope="col">Input</th></tr></thead>
 					<tbody>
 						<tr><td>Choose, press, drag</td><td>Left mouse button</td></tr>
 						<tr><td>Stop the bar, stir, stitch, jump, command</td><td>Space, or the big on-screen button</td></tr>
@@ -131,56 +158,40 @@
 				<h3>Changelog</h3>
 				<p><strong>0.2.0</strong> · shared shell (main menu, lobby, profile), sign-in screen (Google or guest, optional), light co-op for up to four, phone support, Windows auto-update.</p>
 				<p><strong>0.1.0</strong> · first playable MVP.</p>
-			</div>
-		</section>
+			</div></div></section>
 
-		<section id="others">
-			<div class="wrap">
-				<h2>Playing with others</h2>
+		<section id="others" aria-labelledby="others-title"><div class="wrap section-grid"><div class="section-intro"><h2 id="others-title">Playing with others</h2></div><div class="section-body">
 				<p>Choose <strong>Play with others</strong> in the main menu: one player hosts, up to three more join with the address it shows or an online code. The host keeps the order board and the shared wallet, level and horse, and pays every order after checking it; each player works on their own task, and two players never take the same order. Everyone sees who works on which trade. Trainings are for the host only. Online games are not saved on a guest's PC, so a guest's own game is never touched. If the host leaves, the game ends for everybody.</p>
-			</div>
-		</section>
+			</div></div></section>
 
-		<section id="phones">
-			<div class="wrap">
-				<h2>Phones</h2>
+		<section id="phones" aria-labelledby="phones-title"><div class="wrap section-grid"><div class="section-intro"><h2 id="phones-title">Phones</h2></div><div class="section-body">
 				<p>Android and iOS builds come from Unity Build Profiles. A finger works like the mouse (trace, seal, anvil), every key has an on-screen button, and the places (workshop and overview) are tabs on the bottom bar. They have not been tried on a device yet, and no phone build is published.</p>
-			</div>
-		</section>
+			</div></div></section>
 
-		<section id="updates">
-			<div class="wrap">
-				<h2>Updates</h2>
+		<section id="updates" aria-labelledby="updates-title"><div class="wrap section-grid"><div class="section-intro"><h2 id="updates-title">Updates</h2></div><div class="section-body">
 				<p>The Windows game updates itself from the newest GitHub release when it starts. You can turn this off in Profile.</p>
-			</div>
-		</section>
+			</div></div></section>
 
-		<section id="lords">
-			<div class="wrap">
-				<h2>Part of the world of Temnorid</h2>
+		<section id="lords" aria-labelledby="lords-title"><div class="wrap section-grid"><div class="section-intro"><h2 id="lords-title">Part of the world of Temnorid</h2></div><div class="section-body">
 				<p>The first time you press Play, a sign-in screen like the one in Lords offers <strong>Sign in with Google</strong> (on Windows, when it is set up on the device), <strong>Play as a guest</strong> or <strong>Play offline</strong>. You can sign in later from Profile, and a signed-in player starts with their Google name. The workshop plays the same with or without an account, and offline.</p>
 				<p>Master does not read or write anything in Lords: coins, level and ranks live only in Master's own save.</p>
-			</div>
-		</section>
+			</div></div></section>
 
-		<section id="download">
-			<div class="wrap">
-				<h2>Download</h2>
-				<p><a class="btn" href="https://github.com/WebArtWork/master.temnorid.com/releases/latest/download/Temnorid-Master-Setup.exe">Download Temnorid-Master-Setup.exe</a></p>
+		<section id="download" aria-labelledby="download-title"><div class="wrap section-grid"><div class="section-intro"><h2 id="download-title">Download</h2></div><div class="section-body"><p class="release-status">Latest published installer: <a href="https://github.com/WebArtWork/master.temnorid.com/releases/tag/v0.1.0">0.1.0</a>. Development version: 0.2.0. This page describes the development version; some features are not in the published installer yet.</p><p class="release-meta">A Temnorid game · Windows · Android and iOS builds not published yet · version 0.2.0</p><p class="fine">Free · Windows 10 or newer.</p>
+				<p><a class="btn" href="https://github.com/WebArtWork/master.temnorid.com/releases/latest/download/Temnorid-Master-Setup.exe">Download for Windows</a></p>
 				<ol>
 					<li>Download the installer and run it.</li>
 					<li>Windows may warn about an unknown publisher, because the installer is not signed yet. Choose <strong>More info</strong>, then <strong>Run anyway</strong>.</li>
 					<li>Start Temnorid: Master from the Start menu.</li>
 				</ol>
 				<p class="fine">Requires Windows 10 or later, 64-bit. All releases and release notes: <a href="https://github.com/WebArtWork/master.temnorid.com/releases">GitHub Releases</a>.</p>
-			</div>
-		</section>
+			</div></div></section>
 	</main>
 
 	<footer>
 		<div class="wrap">
 			<p>Temnorid: Master · version 0.2.0 · part of <a href="https://temnorid.com">Temnorid</a> · built on the <a href="https://3d.itkamianets.com">IT Kamianets 3D Engine</a>.</p>
-		</div>
+		<a class="back-top" href="#main">Back to top</a></div>
 	</footer>
 </body>
 </html>

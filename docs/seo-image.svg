@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+ <rect width="1200" height="630" fill="#17120d"/><path d="M0 6H1200" stroke="#e0b062" stroke-width="12"/>
+ <g font-family="Segoe UI, Arial, sans-serif" fill="#eceae4">
+ <text x="72" y="105" font-size="26" font-weight="700" letter-spacing="5">TEMNORID</text>
+ <text x="72" y="151" font-size="24" fill="#ecce9e">A village workshop</text>
+ <text x="72" y="285" font-size="96" font-weight="700" letter-spacing="-3">Master</text>
+ <text x="74" y="438" font-size="29" fill="#ecce9e">Seven trades · One workshop</text>
+ <path d="M72 514H1128" stroke="#3d3023" stroke-width="2"/>
+ <text x="72" y="566" font-size="24" fill="#a9acb8">master.temnorid.com</text>
+ <text x="1128" y="566" font-size="24" text-anchor="end" fill="#a9acb8">A Temnorid game</text>
+ </g><g transform="translate(800 148) scale(2.35)"><path d="m36 23 16-8 43 24-12 21Z" fill="#ecce9e"/><path d="m61 42 15 8-27 44-13-8Z" fill="#e0b062"/><path d="M22 81H106C106 93 90 97 78 97L75 105H89V115H39V105H52L48 97H34Z" fill="#e0b062"/><path d="M22 81H106V89H22Z" fill="#ecce9e"/><path d="m52 15 43 24-4 9-43-25Z" fill="#e0b062"/></g></svg>
