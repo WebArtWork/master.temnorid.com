@@ -26,7 +26,11 @@ namespace Temnorid.Master
 				Repo = Repo,
 				InstallerSuffix = "-Setup.exe",
 				MaxPlayers = 4,
-				Multiplayer = true,
+				// Single-player on the landing screen; the Profile screen comes later (the in-game Profile place stays).
+				Multiplayer = false,
+				Profile = false,
+				// After sign-in the game opens in its own village scene, not on the shell's title screen.
+				SkipLanding = true,
 				GameScene = "Master",
 				Accent = new Color(0.93f, 0.76f, 0.36f),
 				Places =

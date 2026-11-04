@@ -31,6 +31,8 @@ namespace Temnorid.Master
 		ConfirmReset,
 		/// <summary>The wallet, level, horse and trades at a glance, and who is in the workshop.</summary>
 		Overview,
+		/// <summary>One profession at a time, full screen, with its teacher; arrows switch to the next one.</summary>
+		Mentor,
 	}
 
 	public enum StepKind
@@ -146,6 +148,12 @@ namespace Temnorid.Master
 		public string ToastText { get; private set; } = "";
 		public float ToastUntil { get; private set; }
 		public int Saves { get; private set; }
+		/// <summary>Which profession the teacher on show offers (an index into <see cref="MasterContent.Professions"/>).</summary>
+		public int MentorIndex { get; private set; }
+		public string MentorId => MasterContent.Professions[MentorIndex].Id;
+		/// <summary>Set when the player said yes in the village: the next session opens on the teachers instead of the workshop hub.</summary>
+		bool _learnAfter;
+		int _lastSideways;
 		public string HoverStation { get; private set; }
 		public bool ToastActive => Time.unscaledTime < ToastUntil;
 
@@ -333,7 +341,57 @@ namespace Temnorid.Master
 			ResetScreens();
 			Horse.Stop();
 			Horse.Apply(Session.Horse, true);
-			SetMode(Mode.Hub, true);
+			if (_learnAfter)
+			{
+				_learnAfter = false;
+				MentorIndex = 0;
+				SetMode(Mode.Mentor, true);
+			}
+			else SetMode(Mode.Hub, true);
+		}
+
+		// ---- the village and the teachers ----
+
+		/// <summary>The village's "yes": continues the saved game (or starts one) and shows the first teacher.</summary>
+		public void StartLearning()
+		{
+			if (Mode != Mode.Title) return;
+			_learnAfter = true;
+			if (HasSave) ContinueGame();
+			else NewGame();
+		}
+
+		/// <summary>The village's "start over": asks first when there is a save, then shows the first teacher.</summary>
+		public void RequestNewLesson()
+		{
+			if (Mode != Mode.Title) return;
+			_learnAfter = true;
+			RequestNewGame();
+		}
+
+		/// <summary>The arrows: the next (+1) or the previous (-1) teacher, all the way round.</summary>
+		public void MentorStep(int direction)
+		{
+			if (Mode != Mode.Mentor) return;
+			var count = MasterContent.Professions.Length;
+			MentorIndex = ((MentorIndex + direction) % count + count) % count;
+			Audio.Play(Sfx.Page, 0.5f);
+			Horse.Apply(Session.Horse);
+			SetMode(Mode.Mentor);
+		}
+
+		/// <summary>"Learn": opens the profession of the teacher on show.</summary>
+		public void MentorLearn()
+		{
+			if (Mode != Mode.Mentor) return;
+			SetMode(Mode.Hub);
+			OpenProfession(MentorId);
+		}
+
+		/// <summary>From the teachers to all seven professions at once (the workshop hub).</summary>
+		public void MentorShowAll()
+		{
+			if (Mode == Mode.Mentor) SetMode(Mode.Hub);
 		}
 
 		/// <summary>The title button: loads the save, or opens the recovery menu when it cannot be read.</summary>
@@ -442,6 +500,8 @@ namespace Temnorid.Master
 				case Mode.Journal:
 				case Mode.Overview:
 					return "hub";
+				case Mode.Mentor:
+					return MentorId == Ids.Stable ? "stable" : MentorId + ".overview";
 				case Mode.Orders:
 					return Session.SelectedProfession + ".overview";
 				case Mode.Task:
@@ -485,6 +545,11 @@ namespace Temnorid.Master
 
 			if (Mode == Mode.Hub) PickStation(input);
 			else ClearHover();
+
+			// Left and right (keys, stick, pad) switch the teacher; one step per press.
+			var sideways = Mode == Mode.Mentor ? Mathf.RoundToInt(input.UI.Navigate.ReadValue<Vector2>().x) : 0;
+			if (sideways != 0 && sideways != _lastSideways) MentorStep(sideways);
+			_lastSideways = sideways;
 
 			switch (Mode)
 			{
@@ -619,6 +684,7 @@ namespace Temnorid.Master
 				case Mode.Recovery:
 					return;
 				case Mode.ConfirmNew:
+					_learnAfter = false;
 					SetMode(Mode.Title);
 					return;
 				case Mode.Hub:
@@ -1335,6 +1401,15 @@ namespace Temnorid.Master
 		}
 
 		/// <summary>Back to the shell's landing screen (the shell has the Quit button); the progress is saved first.</summary>
-		public void Quit() => ShellFlow.QuitToMenu();
+		/// <summary>Leaves the game: the village has no title screen of the shell behind it.</summary>
+		public void Quit()
+		{
+			if (Live) SaveNow();
+#if UNITY_EDITOR
+			UnityEditor.EditorApplication.isPlaying = false;
+#else
+			Application.Quit();
+#endif
+		}
 	}
 }

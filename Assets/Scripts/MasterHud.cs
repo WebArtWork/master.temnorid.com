@@ -115,6 +115,7 @@ namespace Temnorid.Master
 			BuildConfirm(root, Mode.ConfirmNew, Loc.T("newconfirm"), () => Game.NewGame(), () => Game.Back());
 			BuildConfirm(root, Mode.ConfirmReset, Loc.T("reset.confirm"), () => Game.ConfirmReset(), () => Game.Back());
 			BuildRecovery(root);
+			BuildMentor(root);
 			BuildTitle(root);
 			BuildOverlays(root);
 		}
@@ -257,15 +258,7 @@ namespace Temnorid.Master
 
 		void BuildTitle(Transform root)
 		{
-			var screen = Box("Title", root, 0f, 0f, 1f, 1f, new Color(0.06f, 0.04f, 0.03f, 0.55f));
-			_screens[Mode.Title] = screen;
-			var t = screen.transform;
-			Btn(t, Loc.T("menu.new"), 0.35f, 0.58f, 0.65f, 0.7f, () => Game.RequestNewGame(), 36);
-			_continue = Btn(t, Loc.T("menu.continue"), 0.35f, 0.44f, 0.65f, 0.56f, () => Game.ContinueGame(), 36).gameObject;
-			Btn(t, Loc.T("menu.settings"), 0.35f, 0.3f, 0.65f, 0.42f, () => Game.OpenSettings(), 36);
-			Btn(t, Loc.T("menu.main"), 0.35f, 0.16f, 0.65f, 0.28f, () => ShellFlow.QuitToMenu(), 36);
-			_titleNote = Lbl(t, "", 30, TextAnchor.MiddleCenter, 0.1f, 0.06f, 0.9f, 0.12f, new Color(1f, 0.6f, 0.5f));
-			Lbl(t, Loc.T("menu.demo"), 26, TextAnchor.LowerCenter, 0.1f, 0f, 0.9f, 0.05f, Muted);
+			BuildVillage(root);
 		}
 
 		void BuildRecovery(Transform root)
@@ -886,6 +879,9 @@ namespace Temnorid.Master
 					break;
 				case Mode.Hub:
 					RefreshHub();
+					break;
+				case Mode.Mentor:
+					RefreshMentor();
 					break;
 				case Mode.Orders:
 					RefreshOrders();
