@@ -35,8 +35,7 @@ namespace Temnorid.Master
 				Accent = new Color(0.93f, 0.76f, 0.36f),
 				Places =
 				{
-					new ShellPlace(PlaceWorkshop, Loc.T("place.workshop"), "М"),
-					new ShellPlace(PlaceOverview, Loc.T("place.overview"), "О"),
+					new ShellPlace("village", Loc.T("village.tab"), "С"),
 				},
 			};
 		}

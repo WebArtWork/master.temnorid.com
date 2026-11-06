@@ -82,6 +82,9 @@ namespace Temnorid.Master
 
 			// The village and the teachers.
 			{ "village.ask", "Вітаю в нашому селі, майстре! Яку професію ти хочеш вивчити?" },
+			{ "village.tab", "Село" },
+			{ "village.more", "Яку ще професію хочеш вивчити?" },
+			{ "village.done", "Ти вивчив усі ремесла, майстре! Заходь до будь-якої майстерні." },
 			{ "village.yes", "Так, покажіть ремесла" },
 			{ "village.elder", "Староста" },
 			{ "village.restart", "Почати спочатку" },

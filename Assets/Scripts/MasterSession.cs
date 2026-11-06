@@ -78,6 +78,19 @@ namespace Temnorid.Master
 		public IReadOnlyList<string> Upgrades => _upgrades;
 		public IReadOnlyList<string> Processed => _processed;
 		public IReadOnlyList<string> FirstTrainings => _firstTrainings;
+
+		// The professions the player has chosen to learn, in the order they were added: they are the tabs of the top bar.
+		readonly List<string> _learned = new List<string>();
+		public IReadOnlyList<string> Learned => _learned;
+		public bool IsLearned(string id) => _learned.Contains(id);
+
+		/// <summary>Adds a profession to the player's list (once). Returns false for an unknown id or one already on the list.</summary>
+		public bool Learn(string id)
+		{
+			if (MasterContent.FindProfession(id) == null || _learned.Contains(id)) return false;
+			_learned.Add(id);
+			return true;
+		}
 		public IReadOnlyList<HistoryEntry> History => _history;
 		public IReadOnlyList<string> TutorialsShown => _tutorials;
 
@@ -455,6 +468,7 @@ namespace Temnorid.Master
 				processedAttemptIds = _processed.ToArray(),
 				firstCompletedTrainingIds = _firstTrainings.ToArray(),
 				purchasedUpgradeIds = _upgrades.ToArray(),
+				learnedProfessionIds = _learned.ToArray(),
 				tutorialsShown = _tutorials.ToArray(),
 				attemptCounter = _counter,
 				sessionId = _sessionId,
@@ -497,6 +511,15 @@ namespace Temnorid.Master
 			foreach (var id in s.firstCompletedTrainingIds ?? new string[0]) if (MasterContent.Trainings.Contains(id) && !_firstTrainings.Contains(id)) _firstTrainings.Add(id);
 			_upgrades.Clear();
 			foreach (var id in s.purchasedUpgradeIds ?? new string[0]) if (MasterContent.FindUpgrade(id) != null && !_upgrades.Contains(id)) _upgrades.Add(id);
+			_learned.Clear();
+			if (s.learnedProfessionIds != null)
+				foreach (var id in s.learnedProfessionIds) if (MasterContent.FindProfession(id) != null && !_learned.Contains(id)) _learned.Add(id);
+			else
+			{
+				// A save from before the village: whatever the player already worked on counts as learned.
+				if (_firstTrainings.Count > 0) _learned.Add(Ids.Stable);
+				foreach (var done in _completed) { var profession = MasterContent.FindJob(done).Profession; if (!_learned.Contains(profession)) _learned.Add(profession); }
+			}
 			_tutorials.Clear();
 			foreach (var id in s.tutorialsShown ?? new string[0]) if (MasterContent.FindProfession(id) != null && !_tutorials.Contains(id)) _tutorials.Add(id);
 			_counter = Math.Max(0, s.attemptCounter);
@@ -584,6 +607,7 @@ namespace Temnorid.Master
 		public string[] processedAttemptIds;
 		public string[] firstCompletedTrainingIds;
 		public string[] purchasedUpgradeIds;
+		public string[] learnedProfessionIds;
 		public string[] tutorialsShown;
 		public int attemptCounter;
 		public string sessionId;

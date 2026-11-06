@@ -33,6 +33,8 @@ namespace Temnorid.Master
 		Overview,
 		/// <summary>One profession at a time, full screen, with its teacher; arrows switch to the next one.</summary>
 		Mentor,
+		/// <summary>Home: the village, where the elder offers a new profession. The learned professions are tabs beside it.</summary>
+		Village,
 	}
 
 	public enum StepKind
@@ -148,11 +150,10 @@ namespace Temnorid.Master
 		public string ToastText { get; private set; } = "";
 		public float ToastUntil { get; private set; }
 		public int Saves { get; private set; }
-		/// <summary>Which profession the teacher on show offers (an index into <see cref="MasterContent.Professions"/>).</summary>
+		/// <summary>Which of the professions not learned yet the teacher on show offers (an index into <see cref="Candidates"/>).</summary>
 		public int MentorIndex { get; private set; }
-		public string MentorId => MasterContent.Professions[MentorIndex].Id;
-		/// <summary>Set when the player said yes in the village: the next session opens on the teachers instead of the workshop hub.</summary>
-		bool _learnAfter;
+		public IReadOnlyList<string> Candidates => MasterContent.Professions.Select(p => p.Id).Where(id => !Session.IsLearned(id)).ToList();
+		public string MentorId { get { var c = Candidates; return c.Count == 0 ? Ids.Stable : c[Mathf.Clamp(MentorIndex, 0, c.Count - 1)]; } }
 		int _lastSideways;
 		public string HoverStation { get; private set; }
 		public bool ToastActive => Time.unscaledTime < ToastUntil;
@@ -211,6 +212,13 @@ namespace Temnorid.Master
 			Horse.Apply(Session.Horse, true);
 			Track.Show(false);
 			if (NetSession.Instance.IsOnline) BeginOnline();
+			// The game opens in the village: the saved game is loaded, or a new one begun, without a title screen (tests drive the title themselves).
+			else if (SaveRootOverride == null)
+			{
+				if (HasSave) ContinueGame();
+				else if (!SaveProblem) NewGame();
+				else SetMode(Mode.Recovery);
+			}
 		}
 
 		void OnDestroy()
@@ -341,57 +349,60 @@ namespace Temnorid.Master
 			ResetScreens();
 			Horse.Stop();
 			Horse.Apply(Session.Horse, true);
-			if (_learnAfter)
-			{
-				_learnAfter = false;
-				MentorIndex = 0;
-				SetMode(Mode.Mentor, true);
-			}
-			else SetMode(Mode.Hub, true);
+			SetMode(Mode.Hub, true);
 		}
 
-		// ---- the village and the teachers ----
+		// ---- the village, the teachers and the tabs ----
 
-		/// <summary>The village's "yes": continues the saved game (or starts one) and shows the first teacher.</summary>
+		/// <summary>The elder's "yes": the teachers of the professions not learned yet.</summary>
 		public void StartLearning()
 		{
-			if (Mode != Mode.Title) return;
-			_learnAfter = true;
-			if (HasSave) ContinueGame();
-			else NewGame();
-		}
-
-		/// <summary>The village's "start over": asks first when there is a save, then shows the first teacher.</summary>
-		public void RequestNewLesson()
-		{
-			if (Mode != Mode.Title) return;
-			_learnAfter = true;
-			RequestNewGame();
-		}
-
-		/// <summary>The arrows: the next (+1) or the previous (-1) teacher, all the way round.</summary>
-		public void MentorStep(int direction)
-		{
-			if (Mode != Mode.Mentor) return;
-			var count = MasterContent.Professions.Length;
-			MentorIndex = ((MentorIndex + direction) % count + count) % count;
+			if (Mode != Mode.Village || Candidates.Count == 0) return;
+			MentorIndex = 0;
 			Audio.Play(Sfx.Page, 0.5f);
-			Horse.Apply(Session.Horse);
 			SetMode(Mode.Mentor);
 		}
 
-		/// <summary>"Learn": opens the profession of the teacher on show.</summary>
+		/// <summary>The arrows on the teachers: the next (+1) or the previous (-1) profession not learned yet, all the way round.</summary>
+		public void MentorStep(int direction)
+		{
+			if (Mode != Mode.Mentor) return;
+			var count = Candidates.Count;
+			if (count == 0) return;
+			MentorIndex = ((MentorIndex + direction) % count + count) % count;
+			Audio.Play(Sfx.Page, 0.5f);
+			SetMode(Mode.Mentor);
+		}
+
+		/// <summary>"Learn": the teacher's profession joins the player's list, and its building opens.</summary>
 		public void MentorLearn()
 		{
 			if (Mode != Mode.Mentor) return;
-			SetMode(Mode.Hub);
 			OpenProfession(MentorId);
 		}
 
-		/// <summary>From the teachers to all seven professions at once (the workshop hub).</summary>
-		public void MentorShowAll()
+		/// <summary>The tabs, in order: the village first, then the learned professions in the order they were added.</summary>
+		public string[] Tabs => new[] { "village" }.Concat(Session.Learned).ToArray();
+
+		public string CurrentTab => IsInProfession ? Session.SelectedProfession : "village";
+
+		bool IsInProfession => Mode == Mode.Orders || Mode == Mode.Task || Mode == Mode.Result || Mode == Mode.Stable || Mode == Mode.Obstacle || Mode == Mode.Command;
+
+		/// <summary>Goes to a tab: the village, or the building of a learned profession.</summary>
+		public void GoTab(string id)
 		{
-			if (Mode == Mode.Mentor) SetMode(Mode.Hub);
+			if (Mode != Mode.Village && Mode != Mode.Orders && Mode != Mode.Stable) return;
+			if (id == "village") SetMode(Mode.Village);
+			else if (Session.IsLearned(id)) OpenProfession(id);
+		}
+
+		/// <summary>The arrows beside the tabs: the next (+1) or the previous (-1) tab, all the way round.</summary>
+		public void TabStep(int direction)
+		{
+			if (Mode != Mode.Village && Mode != Mode.Orders && Mode != Mode.Stable) return;
+			var tabs = Tabs;
+			var at = Array.IndexOf(tabs, CurrentTab);
+			GoTab(tabs[((Math.Max(0, at) + direction) % tabs.Length + tabs.Length) % tabs.Length]);
 		}
 
 		/// <summary>The title button: loads the save, or opens the recovery menu when it cannot be read.</summary>
@@ -482,6 +493,8 @@ namespace Temnorid.Master
 
 		void SetMode(Mode mode, bool snap = false)
 		{
+			// There is no screen with all the professions: "home" is the village.
+			if (mode == Mode.Hub) mode = Mode.Village;
 			Mode = mode;
 			var key = CameraKey(mode);
 			if (key != null && Cam != null) Cam.Go(key, snap);
@@ -502,6 +515,8 @@ namespace Temnorid.Master
 					return "hub";
 				case Mode.Mentor:
 					return MentorId == Ids.Stable ? "stable" : MentorId + ".overview";
+				case Mode.Village:
+					return "hub";
 				case Mode.Orders:
 					return Session.SelectedProfession + ".overview";
 				case Mode.Task:
@@ -543,12 +558,16 @@ namespace Temnorid.Master
 				}
 			}
 
-			if (Mode == Mode.Hub) PickStation(input);
-			else ClearHover();
+			ClearHover();
 
 			// Left and right (keys, stick, pad) switch the teacher; one step per press.
-			var sideways = Mode == Mode.Mentor ? Mathf.RoundToInt(input.UI.Navigate.ReadValue<Vector2>().x) : 0;
-			if (sideways != 0 && sideways != _lastSideways) MentorStep(sideways);
+			var arrows = Mode == Mode.Mentor || Mode == Mode.Village || Mode == Mode.Orders || Mode == Mode.Stable;
+			var sideways = arrows ? Mathf.RoundToInt(input.UI.Navigate.ReadValue<Vector2>().x) : 0;
+			if (sideways != 0 && sideways != _lastSideways)
+			{
+				if (Mode == Mode.Mentor) MentorStep(sideways);
+				else TabStep(sideways);
+			}
 			_lastSideways = sideways;
 
 			switch (Mode)
@@ -596,8 +615,10 @@ namespace Temnorid.Master
 
 		public void OpenProfession(string id)
 		{
-			if (Mode != Mode.Hub || MasterContent.FindProfession(id) == null) return;
+			if ((Mode != Mode.Mentor && Mode != Mode.Village && Mode != Mode.Orders && Mode != Mode.Stable) || MasterContent.FindProfession(id) == null) return;
+			if (Session.Learn(id)) SaveNow();
 			Session.SelectedProfession = id;
+			MentorIndex = 0;
 			Audio.Play(Sfx.Page, 0.6f);
 			if (id == Ids.Stable)
 			{
@@ -609,18 +630,18 @@ namespace Temnorid.Master
 
 		public void OpenUpgrades()
 		{
-			if (Mode == Mode.Hub) SetMode(Mode.Upgrades);
+			if (Mode == Mode.Village) SetMode(Mode.Upgrades);
 		}
 
 		public void OpenJournal()
 		{
-			if (Mode == Mode.Hub) SetMode(Mode.Journal);
+			if (Mode == Mode.Village) SetMode(Mode.Journal);
 		}
 
 		/// <summary>The overview place: from the hub, the order lists, the stable, the journal, the upgrades or a task (which stays as it is).</summary>
 		public void OpenOverview()
 		{
-			if (Mode == Mode.Hub || Mode == Mode.Orders || Mode == Mode.Stable || Mode == Mode.Journal || Mode == Mode.Upgrades || Mode == Mode.Task)
+			if (Mode == Mode.Village || Mode == Mode.Orders || Mode == Mode.Stable || Mode == Mode.Journal || Mode == Mode.Upgrades || Mode == Mode.Task)
 				SetMode(Mode.Overview);
 		}
 
@@ -639,7 +660,7 @@ namespace Temnorid.Master
 
 		public void Pause()
 		{
-			if (Mode != Mode.Hub) return;
+			if (Mode != Mode.Village) return;
 			SaveNow();
 			Return = Mode.Hub;
 			SetMode(Mode.Pause);
@@ -647,7 +668,7 @@ namespace Temnorid.Master
 
 		public void Resume()
 		{
-			if (Mode == Mode.Pause) SetMode(Mode.Hub);
+			if (Mode == Mode.Pause) SetMode(Mode.Village);
 		}
 
 		public void ToTitle()
@@ -657,7 +678,7 @@ namespace Temnorid.Master
 				ShellFlow.QuitToMenu();
 				return;
 			}
-			if (Mode == Mode.Pause || Mode == Mode.Hub) SaveNow();
+			if (Mode == Mode.Pause || Mode == Mode.Village) SaveNow();
 			RefreshSave();
 			SetMode(Mode.Title);
 		}
@@ -684,11 +705,13 @@ namespace Temnorid.Master
 				case Mode.Recovery:
 					return;
 				case Mode.ConfirmNew:
-					_learnAfter = false;
 					SetMode(Mode.Title);
 					return;
-				case Mode.Hub:
+				case Mode.Village:
 					Pause();
+					return;
+				case Mode.Mentor:
+					SetMode(Mode.Village);
 					return;
 				case Mode.Orders:
 					SetMode(Mode.Hub);
@@ -708,7 +731,7 @@ namespace Temnorid.Master
 					AbortTraining();
 					return;
 				case Mode.Settings:
-					SetMode(Return == Mode.Pause ? Mode.Pause : Return == Mode.Hub ? Mode.Hub : Mode.Title);
+					SetMode(Return == Mode.Pause ? Mode.Pause : Return == Mode.Title ? Mode.Title : Mode.Village);
 					return;
 				case Mode.ConfirmReset:
 					SetMode(Mode.Settings);

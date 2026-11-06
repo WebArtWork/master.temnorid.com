@@ -38,13 +38,15 @@ namespace Temnorid.Master.EditorTools
 			RenderSettings.ambientLight = new Color(0.5f, 0.46f, 0.4f);
 			MakeMaterials();
 
-			var room = new GameObject("Workshop").transform;
-			BuildRoom(room);
+			var room = new GameObject("Buildings").transform;
+			BuildSun(room);
 			var stations = new GameObject("Stations").transform;
 			Renderer billet = null;
 			for (var i = 0; i < StationOrder.Length; i++)
 			{
-				var root = MakeStation(stations, StationOrder[i], new Vector3(-15f + i * 6f, 0f, StationZ));
+				// Every profession has a building of its own, far from the others, so only the one on show is ever in view.
+				BuildBuilding(room, i);
+				var root = MakeStation(stations, StationOrder[i], BuildingOrigin(i) + new Vector3(0f, 0f, StationZ));
 				switch (StationOrder[i])
 				{
 					case Ids.Scribe: BuildScribe(root); break;
@@ -81,9 +83,9 @@ namespace Temnorid.Master.EditorTools
 			};
 			for (var i = 0; i < StationOrder.Length; i++)
 			{
-				var x = -15f + i * 6f;
-				poses.Add(Pose(anchors, StationOrder[i] + ".overview", new Vector3(x - 2.6f, 3.6f, -7.0f), new Vector3(x - 2.6f, 1.5f, StationZ), 52f));
-				poses.Add(Pose(anchors, StationOrder[i] + ".focus", new Vector3(x, 5.0f, -1.2f), new Vector3(x, 0.9f, StationZ), 45f));
+				var o = BuildingOrigin(i);
+				poses.Add(Pose(anchors, StationOrder[i] + ".overview", o + new Vector3(-2.6f, 3.6f, -7.0f), o + new Vector3(-2.6f, 1.5f, StationZ), 52f));
+				poses.Add(Pose(anchors, StationOrder[i] + ".focus", o + new Vector3(0f, 5.0f, -1.2f), o + new Vector3(0f, 0.9f, StationZ), 45f));
 			}
 			view.Poses = poses.ToArray();
 			cameraObject.transform.position = poses[0].Anchor.position;
@@ -144,17 +146,11 @@ namespace Temnorid.Master.EditorTools
 
 		// ---- the workshop ----
 
-		static void BuildRoom(Transform room)
-		{
-			Box(room, "Floor", new Vector3(0f, -0.1f, -12f), new Vector3(46f, 0.2f, 40f), _floor);
-			Box(room, "BackWall", new Vector3(0f, 6f, 6.2f), new Vector3(46f, 12f, 0.3f), _wall);
-			Box(room, "LeftWall", new Vector3(-23f, 6f, 0f), new Vector3(0.3f, 12f, 16f), _wall);
-			Box(room, "RightWall", new Vector3(23f, 6f, 0f), new Vector3(0.3f, 12f, 16f), _wall);
-			Prim(PrimitiveType.Cube, "Plinth", room, new Vector3(0f, 0.3f, 6f), new Vector3(46f, 0.6f, 0.15f), _stone);
-			for (var i = 0; i < 8; i++) Prim(PrimitiveType.Cube, "Beam" + i, room, new Vector3(-20f + i * 5.7f, 5.8f, 0f), new Vector3(0.3f, 0.3f, 16f), _woodDark);
-			Prim(PrimitiveType.Cube, "BeamLong", room, new Vector3(0f, 5.7f, 5.8f), new Vector3(46f, 0.3f, 0.3f), _woodDark);
-			Prim(PrimitiveType.Cube, "Rug", room, new Vector3(0f, 0.01f, -2.2f), new Vector3(34f, 0.02f, 3f), Mat("Rug", new Color(0.36f, 0.16f, 0.14f)));
+		/// <summary>Where a profession's building stands: 120 units apart on a line, far enough that no other building is ever in view.</summary>
+		static Vector3 BuildingOrigin(int index) => new Vector3(-200f, 0f, -120f * (index + 1));
 
+		static void BuildSun(Transform room)
+		{
 			var sun = new GameObject("Sun");
 			sun.transform.SetParent(room, false);
 			sun.transform.rotation = Quaternion.Euler(48f, -20f, 0f);
@@ -164,18 +160,39 @@ namespace Temnorid.Master.EditorTools
 			d.intensity = 1.0f;
 			d.shadows = LightShadows.Soft;
 			d.shadowStrength = 0.6f;
-			for (var i = 0; i < StationOrder.Length; i++)
+		}
+
+		/// <summary>One building: a grass yard, a floor, three walls (the front is open towards the camera), beams and a lamp.</summary>
+		static void BuildBuilding(Transform parent, int index)
+		{
+			var o = BuildingOrigin(index);
+			var walls = new[]
 			{
-				var lamp = new GameObject("Lamp" + i);
-				lamp.transform.SetParent(room, false);
-				lamp.transform.position = new Vector3(-15f + i * 6f, 4.4f, -0.5f);
-				var l = lamp.AddComponent<Light>();
-				l.type = LightType.Point;
-				l.color = new Color(1f, 0.82f, 0.58f);
-				l.intensity = 2.2f;
-				l.range = 7f;
-				l.shadows = LightShadows.None;
-			}
+				new Color(0.72f, 0.64f, 0.5f), new Color(0.6f, 0.62f, 0.7f), new Color(0.5f, 0.46f, 0.44f),
+				new Color(0.66f, 0.56f, 0.4f), new Color(0.8f, 0.74f, 0.66f), new Color(0.54f, 0.64f, 0.5f),
+			};
+			var wall = Mat("Wall" + StationOrder[index], walls[index % walls.Length]);
+			var room = new GameObject("Building_" + StationOrder[index]).transform;
+			room.SetParent(parent, false);
+			Box(room, "Yard", o + new Vector3(0f, -0.35f, 0f), new Vector3(100f, 0.2f, 100f), _grass);
+			Box(room, "Floor", o + new Vector3(0f, -0.1f, -1.5f), new Vector3(16f, 0.2f, 18f), _floor);
+			Box(room, "BackWall", o + new Vector3(0f, 4f, 6.2f), new Vector3(16f, 8f, 0.3f), wall);
+			Box(room, "LeftWall", o + new Vector3(-8f, 4f, -1.5f), new Vector3(0.3f, 8f, 18f), wall);
+			Box(room, "RightWall", o + new Vector3(8f, 4f, -1.5f), new Vector3(0.3f, 8f, 18f), wall);
+			Prim(PrimitiveType.Cube, "Plinth", room, o + new Vector3(0f, 0.3f, 6f), new Vector3(16f, 0.6f, 0.15f), _stone);
+			for (var i = 0; i < 4; i++) Prim(PrimitiveType.Cube, "Beam" + i, room, o + new Vector3(-6f + i * 4f, 7.6f, -1.5f), new Vector3(0.3f, 0.3f, 18f), _woodDark);
+			Prim(PrimitiveType.Cube, "BeamLong", room, o + new Vector3(0f, 7.5f, 5.8f), new Vector3(16f, 0.3f, 0.3f), _woodDark);
+			Prim(PrimitiveType.Cube, "Rug", room, o + new Vector3(0f, 0.01f, -2.2f), new Vector3(10f, 0.02f, 3f), Mat("Rug", new Color(0.36f, 0.16f, 0.14f)));
+
+			var lamp = new GameObject("Lamp");
+			lamp.transform.SetParent(room, false);
+			lamp.transform.position = o + new Vector3(0f, 4.4f, -0.5f);
+			var l = lamp.AddComponent<Light>();
+			l.type = LightType.Point;
+			l.color = new Color(1f, 0.82f, 0.58f);
+			l.intensity = 2.2f;
+			l.range = 14f;
+			l.shadows = LightShadows.None;
 		}
 
 		static Transform MakeStation(Transform parent, string id, Vector3 position)

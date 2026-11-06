@@ -41,10 +41,6 @@ namespace Temnorid.Master
 
 		static readonly string[] Order = { Ids.Stable, Ids.Scribe, Ids.Forge, Ids.Workshop, Ids.Cooking, Ids.Tailor, Ids.Apothecary };
 
-		// Hub.
-		Button[] _cards;
-		Text[] _cardTexts;
-		Text _hubHint;
 
 		// Orders.
 		Text _ordersHead, _ordersTag;
@@ -99,7 +95,6 @@ namespace Temnorid.Master
 			frameRect.offsetMin = Vector2.zero;
 			frameRect.offsetMax = Vector2.zero;
 			var root = frame.transform;
-			BuildHub(root);
 			BuildOrders(root);
 			BuildTask(root);
 			BuildStable(root);
@@ -117,6 +112,7 @@ namespace Temnorid.Master
 			BuildRecovery(root);
 			BuildMentor(root);
 			BuildTitle(root);
+			BuildTabArrows();
 			BuildOverlays(root);
 		}
 
@@ -294,57 +290,6 @@ namespace Temnorid.Master
 			_toastBox.GetComponent<Image>().raycastTarget = false;
 		}
 
-		// ---- hub ----
-
-		void BuildHub(Transform root)
-		{
-			var t = Clear(Mode.Hub, root);
-			Lbl(t, Loc.T("title"), 54, TextAnchor.MiddleLeft, 0.02f, 0.8f, 0.6f, 0.9f, Gold);
-			Lbl(t, Loc.T("hub.sub"), 28, TextAnchor.MiddleLeft, 0.02f, 0.75f, 0.7f, 0.81f, Ink);
-			_cards = new Button[Order.Length];
-			_cardTexts = new Text[Order.Length];
-			const float w = 0.131f;
-			for (var i = 0; i < Order.Length; i++)
-			{
-				var id = Order[i];
-				var x0 = 0.015f + i * (w + 0.0095f);
-				_cards[i] = Btn(t, "", x0, 0.14f, x0 + w, 0.46f, () => Game.OpenProfession(id), 24);
-				var label = _cards[i].GetComponentInChildren<Text>();
-				_cardTexts[i] = label;
-				label.alignment = TextAnchor.LowerCenter;
-				var host = NewHost("Icon", _cards[i].transform, 120f);
-				host.anchorMin = new Vector2(0.32f, 0.66f);
-				host.anchorMax = new Vector2(0.68f, 0.97f);
-				host.offsetMin = host.offsetMax = Vector2.zero;
-				BuildIcon(host, id, Parchment);
-			}
-			_hubHint = Lbl(t, "", 30, TextAnchor.MiddleLeft, 0.02f, 0.47f, 0.98f, 0.54f, Gold, true);
-			var items = new[] { (Loc.T("journal"), (Action)(() => Game.OpenJournal())), (Loc.T("upgrades"), () => Game.OpenUpgrades()), (Loc.T("settings"), () => Game.OpenSettings()), (Loc.T("quit"), () => Game.Pause()) };
-			for (var i = 0; i < items.Length; i++)
-			{
-				var action = items[i].Item2;
-				Btn(t, items[i].Item1, 0.015f + i * 0.2f, 0.015f, 0.195f + i * 0.2f, 0.125f, () => action(), 28);
-			}
-			Btn(t, Loc.T("help"), 0.84f, 0.015f, 0.9f, 0.125f, () => Game.OpenHelp(), 28);
-			Btn(t, Loc.T("pause"), 0.91f, 0.015f, 0.985f, 0.125f, () => Game.Pause(), 24);
-		}
-
-		void RefreshHub()
-		{
-			var s = Game.Session;
-			for (var i = 0; i < Order.Length; i++)
-			{
-				var id = Order[i];
-				var total = id == Ids.Stable ? MasterContent.Trainings.Length : MasterContent.JobsOf(id).Count();
-				var done = id == Ids.Stable ? s.FirstTrainings.Count : MasterContent.JobsOf(id).Count(j => s.StatusOf(j.Id) == JobStatus.Completed);
-				var active = s.ActiveJobId != null && MasterContent.FindJob(s.ActiveJobId).Profession == id;
-				UiBuilder.SetText(_cardTexts[i], Name(id) + "\n<size=18>" + Loc.T("prof." + id + ".tag") + "</size>\n<size=20>" + Loc.T("rank." + s.Rank(id)) + " · " + Loc.T("completed.of", done, total) + (active ? "\n" + Loc.T("orders.active") : "") + "</size>");
-				Tint(_cards[i], id == Ids.Stable && s.FirstTrainings.Count == 0 ? Chosen : Plain);
-			}
-			var all = s.CompletedCount >= MasterContent.Jobs.Length && s.FirstTrainings.Count >= MasterContent.Trainings.Length;
-			UiBuilder.SetText(_hubHint, all ? Loc.T("hub.all") : s.CompletedCount == 0 && s.FirstTrainings.Count == 0 ? Loc.T("hint.stable") : Loc.T("hub.progress", s.CompletedCount));
-		}
-
 		// ---- orders ----
 
 		void BuildOrders(Transform root)
@@ -365,7 +310,6 @@ namespace Temnorid.Master
 				_jobButtonTexts[i] = _jobButtons[i].GetComponentInChildren<Text>();
 			}
 			_abandonButton = Btn(card, Loc.T("task.abandon"), 0.5f, 0.015f, 0.96f, 0.09f, () => Game.AbandonActive(), 22).gameObject;
-			Btn(card, Loc.T("back"), 0.04f, 0.015f, 0.3f, 0.09f, () => Game.Back(), 26);
 		}
 
 		string CurrentJobId(int index) => MasterContent.JobsOf(Game.Session.SelectedProfession).ElementAt(index).Id;
@@ -537,20 +481,14 @@ namespace Temnorid.Master
 
 		void OnPlace(string id)
 		{
-			if (Game == null) return;
-			if (id == MasterShell.PlaceOverview) Game.OpenOverview();
-			else if (id == MasterShell.PlaceWorkshop && Game.Mode == Mode.Overview) Game.Back();
+			if (Game != null) Game.GoTab(id);
 		}
 
 		/// <summary>The tab bar follows the screen the game is on, and the bar and the presence line show who plays along.</summary>
 		void SyncChrome(Mode mode)
 		{
 			if (_chrome == null) return;
-			if (!_chrome.ProfileOpen)
-			{
-				var want = mode == Mode.Overview ? MasterShell.PlaceOverview : MasterShell.PlaceWorkshop;
-				if (_chrome.CurrentPlace != want) _chrome.Select(want, false);
-			}
+			RefreshTabs(mode);
 			if (Time.unscaledTime < _netAt) return;
 			_netAt = Time.unscaledTime + 0.5f;
 			var net = Game.Net;
@@ -657,7 +595,6 @@ namespace Temnorid.Master
 			_obstacleText = _obstacleButton.GetComponentInChildren<Text>();
 			_commandButton = Btn(side, "", 0.05f, 0.05f, 0.95f, 0.42f, () => Game.StartTraining(Ids.Commands), 26);
 			_commandText = _commandButton.GetComponentInChildren<Text>();
-			Btn(t, Loc.T("back"), 0.8f, 0.02f, 0.985f, 0.1f, () => Game.Back(), 28);
 			Btn(t, Loc.T("help"), 0.72f, 0.02f, 0.78f, 0.1f, () => Game.OpenHelp(), 28);
 		}
 
@@ -839,10 +776,11 @@ namespace Temnorid.Master
 			_toastBox.transform.SetAsLastSibling();
 			foreach (var pair in _screens) pair.Value.SetActive(pair.Key == mode);
 			var inGame = Game.Live && mode != Mode.Settings && mode != Mode.ConfirmReset && mode != Mode.Pause && mode != Mode.Help;
-			_topBar.SetActive(inGame);
+			// The coins, level and experience are not shown: the top bar is the shell bar, with the professions as tabs.
+			_topBar.SetActive(false);
 			OnShowTask(mode);
 			var first = _screens.TryGetValue(mode, out var s) ? s : null;
-			if (first != null && mode != Mode.Hub && mode != Mode.Task && mode != Mode.Stable && mode != Mode.Orders) UiBuilder.Select(first);
+			if (first != null && mode != Mode.Mentor && mode != Mode.Village && mode != Mode.Task && mode != Mode.Stable && mode != Mode.Orders) UiBuilder.Select(first);
 		}
 
 		static bool IsConfirm(Mode mode) => mode == Mode.ConfirmNew || mode == Mode.ConfirmReset;
@@ -870,18 +808,16 @@ namespace Temnorid.Master
 			switch (mode)
 			{
 				case Mode.Title:
-					_continue.SetActive(Game.HasSave || Game.SaveProblem);
-					UiBuilder.SetText(_titleNote, "");
 					break;
 				case Mode.Recovery:
 					UiBuilder.SetText(_recoveryText, Loc.T(Game.RecoveryReason));
 					UiBuilder.SetText(_recoveryNote, Game.RecoveryNote == "" ? "" : Loc.T(Game.RecoveryNote));
 					break;
-				case Mode.Hub:
-					RefreshHub();
-					break;
 				case Mode.Mentor:
 					RefreshMentor();
+					break;
+				case Mode.Village:
+					RefreshVillage();
 					break;
 				case Mode.Orders:
 					RefreshOrders();
