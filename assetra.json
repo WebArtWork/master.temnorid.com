@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "1.0.0",
+  "libraryId": "master-temnorid",
+  "units": "meters",
+  "metadata": {
+    "tags": [
+      "assetra"
+    ],
+    "properties": {
+      "assetra": {
+        "format": 1,
+        "project": "master-temnorid",
+        "name": "Temnorid: Master (Темнорід: Майстер)",
+        "modelsDir": "Assets/Models"
+      }
+    }
+  },
+  "assets": []
+}
